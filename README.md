@@ -1,4 +1,4 @@
-# Ehancements made in this fork:
+# Enhancements made in this fork:
 - NEW Feature: Chat timings support
 
     ![Alt Text](/.github/images/chat-timing.png)
