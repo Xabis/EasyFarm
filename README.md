@@ -48,15 +48,15 @@
 - FIX: Circular routing option can now be properly selected and saved.
 - FIX: Attempt to backup if fighting target directly on top of player
 
+Fork releases can be found under [Releases](https://github.com/Xabis/EasyFarm/releases).
+
 # EasyFarm
 General purpose farming tool for Final Fantasy XI. 
 
 ![EasyFarm GUI](https://cloud.githubusercontent.com/assets/5349608/18617645/662f66d8-7da2-11e6-8039-af1f54a52dcb.png)
 
 #### Downloads 
-[![Build status](https://ci.appveyor.com/api/projects/status/6o73j4hrbk02xroq?svg=true)](https://ci.appveyor.com/project/Mykezero/easyfarm)
-
-The newest version of EasyFarm can be found under [Releases](https://github.com/EasyFarm/EasyFarm/releases).
+The newest version of EasyFarm can be found under [Releases](https://github.com/Xabis/EasyFarm/releases).
 
 #### EasyFarm is Free Software
 [![GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/philosophy/free-sw.html)
