@@ -37,5 +37,12 @@ namespace EasyFarm.Classes
         /// <param name="name"></param>
         /// <returns></returns>
         IUnit GetUnitByName(string name);
+
+        /// <summary>
+        /// Retrieves a unit from the unit array by id.
+        /// </summary>
+        /// <param name="id">Targetting index. Not to be confused with claim id.</param>
+        /// <returns></returns>
+        IUnit GetUnitById(int id);
     }
 }

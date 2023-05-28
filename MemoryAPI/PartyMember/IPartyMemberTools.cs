@@ -25,6 +25,10 @@ namespace MemoryAPI
 
         int ServerID { get; }
 
+        int Index { get; }
+
+        int TargetIndex { get; }
+
         string Name { get; }
 
         int HPCurrent { get; }

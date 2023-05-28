@@ -54,6 +54,7 @@ namespace EasyFarm.States
 
             // Stop program from running to next waypoint.
             context.API.Navigator.Reset();
+            context.API.Follow.Reset();
 
             // Wait until we are done zoning.
             while (IsZoning(context)) ZoningAction();

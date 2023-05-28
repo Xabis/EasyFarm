@@ -22,6 +22,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using EasyFarm.UserSettings;
 using MemoryAPI.Navigation;
+using System.Diagnostics;
+using System.Configuration;
 
 namespace EasyFarm.Classes
 {
@@ -55,11 +57,33 @@ namespace EasyFarm.Classes
             // Mob not rendered on screen.
             if (!mob.IsRendered) return false;
 
+            // Mob cannot be targetted
+            if (!Config.Instance.UntargettableFilter && !mob.IsTargetable) return false;
+
             // Type is not mob
             if (!mob.NpcType.Equals(NpcType.Mob)) return false;
 
-            // Kill aggro if aggro's checked regardless of target's list but follows the ignored list.
+            // Target HP Checks Enabled. This is prioritized over aggro, since this is a niche check tht relies on other party members
+            if (config.TargetLowerHealth != 0 || config.TargetUpperHealth != 0)
+            {
+                // Target Upper Health Check
+                if (mob.HppCurrent > config.TargetUpperHealth) return false;
+
+                // Target Lower Health Check
+                if (mob.HppCurrent < config.TargetLowerHealth) return false;
+            }
+
+            // Always target enemies directly aggro on the player
             if (mob.HasAggroed) return true;
+
+            // If party aggro is checked, then always target enemies directly aggro on any party member
+            if (config.PartyAggroFilter && mob.HasAggroedParty) return true;
+
+            // A target lockout has been applied. This should not take precendent over party aggro.
+            if (mob.isLocked && config.PullFallback == PullFallbackType.Lock) return false;
+
+            // Mob is out of range
+            if (!(mob.Distance < config.DetectionDistance)) return false;
 
             // NM Huntinng
             if (Config.Instance.IsNMHunting)
@@ -73,16 +97,12 @@ namespace EasyFarm.Classes
                 }
             }
 
-
-            // Mob is out of range
-            if (!(mob.Distance < config.DetectionDistance)) return false;
-
             if (mob.IsPet) return false;
 
             // If any unit is within the wander distance then the
-            if (config.Route.Waypoints.Any())
+            if (config.RouteLimitTargets && config.Route.IsPathSet)
             {
-                if (!config.Route.Waypoints.Any(waypoint => Distance(mob, waypoint) <= config.WanderDistance)) return false;
+                if (!config.Route.IsWithinDistance(mob.Position, config.WanderDistance)) return false;
             }
 
             // Mob too high out of reach.
@@ -100,9 +120,12 @@ namespace EasyFarm.Classes
                 config.TargetedMobs.Any())
                 return false;
 
-
             // Kill the creature if it is claimed by party and party is checked.
             if (mob.PartyClaim && config.PartyFilter) return true;
+
+            // Ignore if the aggro filter is off, and the creature is aggro
+            if (!config.AggroFilter && mob.Status == Status.Fighting)
+                return false;
 
             // Kill the creature if it's not claimed and unclaimed is checked.
             if (!mob.IsClaimed && config.UnclaimedFilter) return true;

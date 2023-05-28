@@ -107,40 +107,40 @@ public static partial class Detour{
     }
 
 
-    public static void calcSlabEndPoints(float[] va, int vaStart, float[] vb, int vbStart, float[] bmin, float[] bmax, int side)
+    public static void calcSlabEndPoints(float[] va, float[] vb, float[] bmin, float[] bmax, int side)
     {
 	    if (side == 0 || side == 4)
 	    {
-		    if (va[vaStart + 2] < vb[vbStart + 2])
+		    if (va[2] < vb[2])
 		    {
-			    bmin[0] = va[vaStart + 2];
-			    bmin[1] = va[vaStart + 1];
-			    bmax[0] = vb[vbStart + 2];
-			    bmax[1] = vb[vbStart + 1];
+			    bmin[0] = va[2];
+			    bmin[1] = va[1];
+			    bmax[0] = vb[2];
+			    bmax[1] = vb[1];
 		    }
 		    else
 		    {
-			    bmin[0] = vb[vbStart + 2];
-			    bmin[1] = vb[vbStart + 1];
-			    bmax[0] = va[vaStart + 2];
-			    bmax[1] = va[vaStart + 1];
+			    bmin[0] = vb[2];
+			    bmin[1] = vb[1];
+			    bmax[0] = va[2];
+			    bmax[1] = va[1];
 		    }
 	    }
 	    else if (side == 2 || side == 6)
 		{
-			if (va[vaStart + 0] < vb[0])
+			if (va[0] < vb[0])
 		    {
-			    bmin[0] = va[vaStart + 0];
-			    bmin[1] = va[vaStart + 1];
-			    bmax[0] = vb[vbStart + 0];
-			    bmax[1] = vb[vbStart + 1];
+			    bmin[0] = va[0];
+			    bmin[1] = va[1];
+			    bmax[0] = vb[0];
+			    bmax[1] = vb[1];
 		    }
 		    else
 		    {
-			    bmin[0] = vb[vbStart + 0];
-			    bmin[1] = vb[vbStart + 1];
-			    bmax[0] = va[vaStart + 0];
-			    bmax[1] = va[vaStart + 1];
+			    bmin[0] = vb[0];
+			    bmin[1] = vb[1];
+			    bmax[0] = va[0];
+			    bmax[1] = va[1];
 		    }
 	    }
     }
@@ -374,24 +374,18 @@ public static partial class Detour{
 	        if (m_tileLutSize == 0)
                 m_tileLutSize = 1;
 	        m_tileLutMask = m_tileLutSize-1; 
-	
-	        //m_tiles = (dtMeshTile*)dtAlloc(sizeof(dtMeshTile)*m_maxTiles, DT_ALLOC_PERM);
             m_tiles = new dtMeshTile[m_maxTiles];
-            dtcsArrayItemsCreate(m_tiles);
         
 	        if (m_tiles == null)
 		        return (DT_FAILURE | DT_OUT_OF_MEMORY);
-	        //m_posLookup = (dtMeshTile**)dtAlloc(sizeof(dtMeshTile*)*m_tileLutSize, DT_ALLOC_PERM);
             m_posLookup = new dtMeshTile[m_tileLutSize];
-            dtcsArrayItemsCreate(m_posLookup);
 	        if (m_posLookup == null)
 		        return DT_FAILURE | DT_OUT_OF_MEMORY;
-	        //memset(m_tiles, 0, sizeof(dtMeshTile)*m_maxTiles);
-	        //memset(m_posLookup, 0, sizeof(dtMeshTile*)*m_tileLutSize);
 	        m_nextFree = null;
 	        for (int i = m_maxTiles-1; i >= 0; --i)
 	        {
-		        m_tiles[i].salt = 1;
+				m_tiles[i] = new dtMeshTile();
+                m_tiles[i].salt = 1;
 		        m_tiles[i].next = m_nextFree;
 		        m_nextFree = m_tiles[i];
 	        }
@@ -457,7 +451,7 @@ public static partial class Detour{
 
         //////////////////////////////////////////////////////////////////////////////////////////
         /// Returns all polygons in neighbour tile based on portal defined by the segment.
-        public int findConnectingPolys(float[] va, int vaStart, float[] vb, int vbStart,
+        public int findConnectingPolys(float[] va, float[] vb,
 								           dtMeshTile tile, int side,
 								           dtPolyRef[] con, float[] conarea, int maxcon)
         {
@@ -466,8 +460,8 @@ public static partial class Detour{
 	
 	        float[] amin = new float[2];
             float[] amax = new float[2];
-	        calcSlabEndPoints(va, vaStart,vb, vbStart, amin,amax, side);
-	        float apos = getSlabCoord(va, vaStart, side);
+	        calcSlabEndPoints(va, vb, amin, amax, side);
+	        float apos = getSlabCoord(va, side);
 
 	        // Remove links pointing to 'side' and compact the links array. 
 	        float[] bmin = new float[2];
@@ -489,19 +483,21 @@ public static partial class Detour{
 			
 			        //const float* vc = &tile.verts[poly.verts[j]*3];
 			        //const float* vd = &tile.verts[poly.verts[(j+1) % nv]*3];
-                    int vcStart = poly.verts[j]*3;
-                    int vdStart = poly.verts[(j+1) % nv]*3;
-			        float bpos = getSlabCoord(tile.verts, vcStart, side);
+                    float[] vc = new float[3];
+                    float[] vd = new float[3];
+                    dtVcopy(vc, 0, tile.verts, poly.verts[j] * 3);
+                    dtVcopy(vd, 0, tile.verts, poly.verts[(j + 1) % nv] * 3);
+                    float bpos = getSlabCoord(vc, side);
 			
 			        // Segments are not close enough.
 			        if (Math.Abs(apos-bpos) > 0.01f)
 				        continue;
 			
 			        // Check if the segments touch.
-			        calcSlabEndPoints(tile.verts,vcStart,tile.verts,vdStart, bmin,bmax, side);
+			        calcSlabEndPoints(vc, vd, bmin, bmax, side);
 			
-			        if (!overlapSlabs(amin,amax, bmin,bmax, 0.01f, tile.header.walkableClimb)) 
-                        continue;
+			        if (!overlapSlabs(amin, amax, bmin, bmax, 0.01f, tile.header.walkableClimb)) 
+						continue;
 			
 			        // Add return value.
 			        if (n < maxcon)
@@ -566,8 +562,6 @@ public static partial class Detour{
 		        dtPoly poly = tile.polys[i];
 
 		        // Create new links.
-        //		ushort m = DT_EXT_LINK | (ushort)side;
-		
 		        int nv = (int)poly.vertCount;
 		        for (int j = 0; j < nv; ++j)
 				{
@@ -580,15 +574,14 @@ public static partial class Detour{
 				        continue;
 
 					// Create new links
-					//const float* va = &tile.verts[poly.verts[j]*3];
-					//const float* vb = &tile.verts[poly.verts[(j+1) % nv]*3];
-					var vbStartIndex = (j + 1) % nv;
-					int vaStart = poly.verts[j]*3;
-					int vbStart = poly.verts[vbStartIndex] *3;
+					float[] va = new float[3];
+                    float[] vb = new float[3];
+					dtVcopy(va, 0, tile.verts, poly.verts[j] * 3);
+                    dtVcopy(vb, 0, tile.verts, poly.verts[(j + 1) % nv] * 3);
 
 					dtPolyRef[] nei = new dtPolyRef[4];
 			        float[] neia = new float[4*2];
-			        int nnei = findConnectingPolys(tile.verts,vaStart,tile.verts,vbStart, target, dtOppositeTile(dir), nei,neia,4);
+			        int nnei = findConnectingPolys(va, vb, target, dtOppositeTile(dir), nei, neia, 4);
 			        for (int k = 0; k < nnei; ++k)
 			        {
 				        uint idx = allocLink(tile);
@@ -605,21 +598,37 @@ public static partial class Detour{
 					        // Compress portal limits to a byte value.
 					        if (dir == 0 || dir == 4)
 					        {
-						        float tmin = (neia[k*2+0]-tile.verts[vaStart + 2]) / (tile.verts[vbStart + 2]-tile.verts[vaStart + 2]);
-						        float tmax = (neia[k*2+1]-tile.verts[vaStart + 2]) / (tile.verts[vbStart +2]-tile.verts[vaStart + 2]);
-						        if (tmin > tmax)
-							        dtSwap(ref tmin,ref tmax);
-						        link.bmin = (byte)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						        link.bmax = (byte)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+
+								float tmin = (neia[k*2+0]-va[2]) / (vb[2]-va[2]);
+								float tmax = (neia[k*2+1]-va[2]) / (vb[2]-va[2]);
+								if (tmin > tmax)
+									dtSwap(ref tmin,ref tmax);
+								link.bmin = (byte)Math.Round(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+								link.bmax = (byte)Math.Round(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+
+
+						        //float tmin = (neia[k*2+0]-tile.verts[vaStart + 2]) / (tile.verts[vbStart + 2]-tile.verts[vaStart + 2]);
+						        //float tmax = (neia[k*2+1]-tile.verts[vaStart + 2]) / (tile.verts[vbStart +2]-tile.verts[vaStart + 2]);
+						        //if (tmin > tmax)
+							       // dtSwap(ref tmin,ref tmax);
+						        //link.bmin = (byte)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+						        //link.bmax = (byte)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
 					        }
 					        else if (dir == 2 || dir == 6)
 					        {
-						        float tmin = (neia[k*2+0]-tile.verts[vaStart + 0]) / (tile.verts[vbStart +0]-tile.verts[vaStart + 0]);
-						        float tmax = (neia[k*2+1]-tile.verts[vaStart + 0]) / (tile.verts[vbStart +0]-tile.verts[vaStart + 0]);
-						        if (tmin > tmax)
-							        dtSwap(ref tmin,ref tmax);
-						        link.bmin = (byte)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						        link.bmax = (byte)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+								float tmin = (neia[k*2+0]-va[0]) / (vb[0]-va[0]);
+								float tmax = (neia[k*2+1]-va[0]) / (vb[0]-va[0]);
+								if (tmin > tmax)
+									dtSwap(ref tmin,ref tmax);
+								link.bmin = (byte)Math.Round(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+								link.bmax = (byte)Math.Round(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+
+						        //float tmin = (neia[k*2+0]-tile.verts[vaStart + 0]) / (tile.verts[vbStart +0]-tile.verts[vaStart + 0]);
+						        //float tmax = (neia[k*2+1]-tile.verts[vaStart + 0]) / (tile.verts[vbStart +0]-tile.verts[vaStart + 0]);
+						        //if (tmin > tmax)
+							       // dtSwap(ref tmin,ref tmax);
+						        //link.bmin = (byte)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+						        //link.bmax = (byte)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
 					        }
 				        }
 			        }
@@ -1071,9 +1080,17 @@ public static partial class Detour{
 		        return DT_FAILURE | DT_WRONG_MAGIC;
 	        if (header.version != DT_NAVMESH_VERSION)
 		        return DT_FAILURE | DT_WRONG_VERSION;
-		
-	        // Make sure the location is free.
-	        if (getTileAt(header.x, header.y, header.layer) != null)
+
+#if DT_POLYREF64
+#else
+			// Do not allow adding more polygons than specified in the NavMesh's maxPolys constraint.
+			// Otherwise, the poly ID cannot be represented with the given number of bits.
+			if (m_polyBits < dtIlog2(dtNextPow2((uint)header.polyCount)))
+				return DT_FAILURE | DT_INVALID_PARAM;
+#endif
+
+            // Make sure the location is free.
+            if (getTileAt(header.x, header.y, header.layer) != null)
 		        return DT_FAILURE;
 		
 	        // Allocate a tile.
@@ -1166,9 +1183,10 @@ public static partial class Detour{
 
 			connectIntLinks(tile);
 	        baseOffMeshLinks(tile);
+            connectExtOffMeshLinks(tile, tile, -1);
 
-	        // Create connections with neighbour tiles.
-	        const int MAX_NEIS = 32;
+            // Create connections with neighbour tiles.
+            const int MAX_NEIS = 32;
 	        dtMeshTile[] neis = new dtMeshTile[MAX_NEIS];
 	        int nneis;
 	
@@ -1176,11 +1194,11 @@ public static partial class Detour{
 	        nneis = getTilesAt(header.x, header.y, neis, MAX_NEIS);
 			for (int j = 0; j < nneis; ++j)
 			{
-				if (neis[j] != tile)
-		        {
-			        connectExtLinks(tile, neis[j], -1);
-			        connectExtLinks(neis[j], tile, -1);
-		        }
+				if (neis[j] == tile)
+					continue;
+
+			    connectExtLinks(tile, neis[j], -1);
+			    connectExtLinks(neis[j], tile, -1);
 		        connectExtOffMeshLinks(tile, neis[j], -1);
 		        connectExtOffMeshLinks(neis[j], tile, -1);
 	        }

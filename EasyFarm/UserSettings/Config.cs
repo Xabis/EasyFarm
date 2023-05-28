@@ -17,6 +17,7 @@
 // ///////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.ObjectModel;
+using System.Windows.Media.Animation;
 using System.Xml.Serialization;
 using EasyFarm.Classes;
 using EasyFarm.Infrastructure;
@@ -41,6 +42,11 @@ namespace EasyFarm.UserSettings
         ///     Used to filter out aggroed mobs.
         /// </summary>
         public bool AggroFilter = true;
+
+        /// <summary>
+        ///     Used to filter out party aggroed mobs.
+        /// </summary>
+        public bool PartyAggroFilter = true;
 
         /// <summary>
         ///     Contains all the lists that contain the moves used by
@@ -150,9 +156,44 @@ namespace EasyFarm.UserSettings
         public bool UnclaimedFilter = true;
 
         /// <summary>
+        ///     Used to filter out untargettable mobs.
+        /// </summary>
+        public bool UntargettableFilter = false;
+
+        /// <summary>
         ///     How far to go of the path for a unit.
         /// </summary>
         public double WanderDistance = Constants.DetectionDistance;
+
+        /// <summary>
+        ///     Determines if targetting distance is restricted while a route is in effect.
+        /// </summary>
+        public bool RouteLimitTargets = false;
+
+        /// <summary>
+        ///     Determines if the player is tethered while a route is in effect.
+        /// </summary>
+        public bool RouteTetherPlayer = false;
+
+        /// <summary>
+        ///     Determines how close the player needs to be to a waaypoint to be considered to have arrived.
+        /// </summary>
+        public double RouteTolerance = 0.5;
+
+        /// <summary>
+        ///     Determines how far away from the current waypoint the player must be to generate the navigation path from the mesh.
+        /// </summary>
+        public double RouteNavMeshTolerance = 3.0;
+
+        /// <summary>
+        ///     Determines the upper health a unit must have in order to be targetted. This option only makes sense if there is another source of damage such as another player.
+        /// </summary>
+        public int TargetUpperHealth = 100;
+
+        /// <summary>
+        ///     Determines the lower health a unit must have in order to be targetted. This option only makes sense if there is another source of damage such as another player.
+        /// </summary>
+        public int TargetLowerHealth = 0;
 
         static Config()
         {
@@ -182,7 +223,7 @@ namespace EasyFarm.UserSettings
 
         public Route Route = new Route();
 
-        public bool StraightRoute => Route.StraightRoute;
+        public bool StraightRoute = true;
 
         /// <summary>
         /// Whether program should minimize to system tray.
@@ -219,5 +260,20 @@ namespace EasyFarm.UserSettings
         /// The current player to follow.
         /// </summary>
         public string FollowedPlayer = string.Empty;
+
+        /// <summary>
+        /// When pulling fails, this is the action taken in response.
+        /// </summary>
+        public PullFallbackType PullFallback = PullFallbackType.Lock;
+
+        /// <summary>
+        /// The amount of time to lock a target from selection, due a pull failure
+        /// </summary>
+        public int PullLockTime = 5000;
+
+        /// <summary>
+        /// If auto-target occurs, do not cycle disengage/engage
+        /// </summary>
+        public bool AllowAutoTarget = true;
     }
 }

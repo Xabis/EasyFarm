@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="EasyFarm.Views.PullBehaviourView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:infrastructure="clr-namespace:EasyFarm.Infrastructure"
+             xmlns:settings="clr-namespace:EasyFarm.UserSettings"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="400">
+    <Grid>
+        <Grid.Resources>
+            <infrastructure:EnumConverter x:Key="EnumConverter" />
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <RadioButton Content="Lockout and choose a new target" IsChecked="{Binding Path=PullFallback, Converter={StaticResource EnumConverter}, ConverterParameter={x:Static settings:PullFallbackType.Lock}}"  ToolTip="A lockout will be placed on the target, preventing retargetting for a period of time.&#10;If there are other eligible mobs in range, the target will be changed.&#10;If there are no eligible mobs, navigation will resume or the player will become idle.&#10;Target will not be changed if claimed by or aggro to the party." HorizontalAlignment="Left" Margin="5" VerticalAlignment="Center" Grid.Column="0" Height="18" Width="Auto" Grid.ColumnSpan="3"/>
+        <RadioButton Content="Lockout and approach target" IsChecked="{Binding Path=PullFallback, Converter={StaticResource EnumConverter}, ConverterParameter={x:Static settings:PullFallbackType.Approach}}" ToolTip="Pulling abilities are temporarily disabled and the player will navigate into melee range.&#10;Pull abilities are re-enabled when the lockout time expires.&#10;Warning: Approach must be enabled for this option to take effect." HorizontalAlignment="Left" Margin="5" Grid.Row="1" VerticalAlignment="Center" Grid.Column="0" Height="18" Width="Auto" Grid.ColumnSpan="3"/>
+        <RadioButton Content="Nothing" IsChecked="{Binding Path=PullFallback, Converter={StaticResource EnumConverter}, ConverterParameter={x:Static settings:PullFallbackType.None}}" ToolTip="No fallback action.&#10;Instead, pulling will be retried indefinitely, until the target is either lost or the pull succeeds.&#10;Warning: this can lead to the bot getting stuck depending on configuration. This is the original behaviour." HorizontalAlignment="Left" Margin="5" Grid.Row="2" VerticalAlignment="Center" Grid.Column="0" Height="18" Width="Auto" Grid.ColumnSpan="3"/>
+        <Label Content="Lockout time (ms):" HorizontalAlignment="Left" Grid.Row="3" VerticalAlignment="Center" Grid.Column="0" Height="26" Width="Auto" ToolTip="Number of milliseconds the target is locked. Lockout time is not used when the 'Nothing' option is selected." />
+        <controls:NumericUpDown
+            Grid.Row="3"
+            VerticalAlignment="Center" Margin="5,0,5,0" Grid.Column="1" Height="26" Value="{Binding PullLockTime}" />
+    </Grid>
+</UserControl>

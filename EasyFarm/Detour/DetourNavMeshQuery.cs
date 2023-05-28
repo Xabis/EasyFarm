@@ -243,7 +243,10 @@ public static partial class Detour{
         /// @returns The status flags for the query.
         public dtStatus init(dtNavMesh nav, int maxNodes)
         {
-	        m_nav = nav;
+            if (maxNodes > DT_NULL_IDX || maxNodes > (1 << DT_NODE_PARENT_BITS) - 1)
+                return DT_FAILURE | DT_INVALID_PARAM;
+
+            m_nav = nav;
 	
 	        if (m_nodePool == null || m_nodePool.getMaxNodes() < maxNodes)
 	        {
@@ -614,7 +617,13 @@ public static partial class Detour{
         ///
         /// See closestPointOnPolyBoundary() for a limited but faster option.
         ///
-		public dtStatus closestPointOnPoly(dtPolyRef polyRef, float[] pos, float[] closest, ref bool posOverPoly)
+		public dtStatus closestPointOnPoly(dtPolyRef polyRef, float[] pos, float[] closest)
+		{
+			bool result = false;
+			return closestPointOnPoly(polyRef, pos, closest, ref result);
+        }
+
+        public dtStatus closestPointOnPoly(dtPolyRef polyRef, float[] pos, float[] closest, ref bool posOverPoly)
         {
 	        Debug.Assert(m_nav != null);
 	        dtMeshTile tile = null;
@@ -1158,9 +1167,9 @@ public static partial class Detour{
 	        dtNode lastBestNode = startNode;
 	        float lastBestNodeCost = startNode.total;
 	
-	        dtStatus status = DT_SUCCESS;
-	
-	        while (!m_openList.empty())
+            bool outOfNodes = false;
+
+            while (!m_openList.empty())
 	        {
 		        // Remove node from open list and put it in closed list.
 		        dtNode bestNode = m_openList.pop();
@@ -1209,10 +1218,16 @@ public static partial class Detour{
 			        if (!filter.passFilter(neighbourRef, neighbourTile, neighbourPoly))
 				        continue;
 
-			        dtNode neighbourNode = m_nodePool.getNode(neighbourRef);
+                    // deal explicitly with crossing tile boundaries
+                    uint crossSide = 0;
+                    if (bestTile.links[i].side != 0xff)
+                        crossSide = (uint)(bestTile.links[i].side >> 1);
+
+                    // get the node
+                    dtNode neighbourNode = m_nodePool.getNode(neighbourRef, crossSide);
 			        if (neighbourNode == null)
 			        {
-				        status |= DT_OUT_OF_NODES;
+						outOfNodes = true;
 				        continue;
 			        }
 			
@@ -1293,41 +1308,58 @@ public static partial class Detour{
 			        }
 		        }
 	        }
-	
-	        if (lastBestNode.id != endRef)
+
+            dtStatus status = getPathToNode(lastBestNode, path, ref pathCount, maxPath);
+
+            if (lastBestNode.id != endRef)
 		        status |= DT_PARTIAL_RESULT;
-	
-	        // Reverse the path.
-	        dtNode prev = null;
-	        dtNode node = lastBestNode;
-	        do
-	        {
-		        dtNode next = m_nodePool.getNodeAtIdx(node.pidx);
-		        node.pidx = m_nodePool.getNodeIdx(prev);
-		        prev = node;
-		        node = next;
-	        }
-	        while (node != null);
-	
-	        // Store path
-	        node = prev;
-	        int n = 0;
-	        do
-	        {
-		        path[n++] = node.id;
-		        if (n >= maxPath)
-		        {
-			        status |= DT_BUFFER_TOO_SMALL;
-			        break;
-		        }
-		        node = m_nodePool.getNodeAtIdx(node.pidx);
-	        }
-	        while (node != null);
-	
-	        pathCount = n;
+
+            if (outOfNodes)
+                status |= DT_OUT_OF_NODES;
 	
 	        return status;
         }
+
+		public dtStatus getPathToNode(dtNode endNode, dtPolyRef[] path, ref int pathCount, int maxPath)
+		{
+			// Find the length of the entire path.
+			dtNode curNode = endNode;
+			int length = 0;
+
+			do
+			{
+				length++;
+				curNode = m_nodePool.getNodeAtIdx(curNode.pidx);
+			} while (curNode != null);
+
+			// If the path cannot be fully stored then advance to the last node we will be able to store.
+			curNode = endNode;
+			int writeCount;
+			for (writeCount = length; writeCount > maxPath; writeCount--)
+			{
+                Debug.Assert(curNode != null);
+				curNode = m_nodePool.getNodeAtIdx(curNode.pidx);
+			}
+
+			// Write path
+			for (int i = writeCount - 1; i >= 0; i--)
+			{
+                Debug.Assert(curNode != null);
+
+                path[i] = curNode.id;
+				curNode = m_nodePool.getNodeAtIdx(curNode.pidx);
+			}
+
+            Debug.Assert(curNode == null);
+
+			pathCount = Math.Min(length, maxPath);
+
+			if (length > maxPath)
+				return DT_SUCCESS | DT_BUFFER_TOO_SMALL;
+
+			return DT_SUCCESS;
+		}
+
 
         ///@}
         /// @name Sliced Pathfinding Functions
@@ -3714,8 +3746,14 @@ public static partial class Detour{
         bool isInClosedList(dtPolyRef polyRef)
         {
 	        if (m_nodePool == null) return false;
-	        dtNode node = m_nodePool.findNode(polyRef);
-	        return node != null && node.dtcsTestFlag(dtNodeFlags.DT_NODE_CLOSED);// .flags & DT_NODE_CLOSED;
+
+			dtNode[] nodes = m_nodePool.findNodes(polyRef,1 << DT_NODE_STATE_BITS);
+			for (int i = 0; i < nodes.Length; i++)
+			{
+				if (nodes[i].dtcsTestFlag(dtNodeFlags.DT_NODE_CLOSED))
+					return true;
+			}
+			return false;
         }
 
         /// Gets the navigation mesh the query object is using.

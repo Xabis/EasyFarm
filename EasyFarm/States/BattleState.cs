@@ -62,6 +62,7 @@ namespace EasyFarm.States
         {
             Player.Stand(context.API);
             context.API.Navigator.Reset();
+            context.API.Follow.Reset();
         }
 
         public override void Run(IGameContext context)

@@ -31,7 +31,7 @@ namespace MemoryAPI.Navigation
 
         public override string ToString()
         {
-            return "(X: " + X + " Z: " + Z + ")";
+            return "(X: " + X + " Y: " + Y + " Z: " + Z + ")";
         }
 
         public override int GetHashCode()
@@ -76,6 +76,15 @@ namespace MemoryAPI.Navigation
                 (A.Z * B.Z));
         }
 
+        public static float DotF(Position A, Position B)
+        {
+            return
+                (A.X * B.X) +
+                (A.Y * B.Y) +
+                (A.Z * B.Z);
+        }
+
+
         public static Position Cross(Position A, Position B)
         {
             return new Position()
@@ -105,6 +114,84 @@ namespace MemoryAPI.Navigation
                 Y = A.Y - B.Y,
                 Z = A.Z - B.Z
             };
+        }
+
+        public static Position operator +(Position A, Position B)
+        {
+            return new Position
+            {
+                X = A.X + B.X,
+                Y = A.Y + B.Y,
+                Z = A.Z + B.Z
+            };
+        }
+        public static Position operator *(Position A, Position B)
+        {
+            return new Position
+            {
+                X = A.X * B.X,
+                Y = A.Y * B.Y,
+                Z = A.Z * B.Z
+            };
+        }
+        public static Position operator *(Position A, float B)
+        {
+            return new Position
+            {
+                X = A.X * B,
+                Y = A.Y * B,
+                Z = A.Z * B
+            };
+        }
+        public static Position operator *(float A, Position B)
+        {
+            return new Position
+            {
+                X = A * B.X,
+                Y = A * B.Y,
+                Z = A * B.Z
+            };
+        }
+
+        public Position HeadingVector()
+        {
+            return new Position
+            {
+                X = (float)Math.Cos(H),
+                Y = 0,
+                Z = -(float)Math.Sin(H),
+            }.Normalized();
+        }
+
+        public Position PerpendicularVectorFromHeading()
+        {
+            Position heading = HeadingVector();
+            return new Position
+            {
+                X = heading.Z,
+                Z = -heading.X,
+            };
+        }
+
+        /// <summary>
+        /// Projects a clamped point onto line AB that is perpendicular from position P. 
+        /// </summary>
+        /// <param name="A">Point 1 in line AB</param>
+        /// <param name="B">Point 2 in line AB</param>
+        /// <param name="P">Position to project from</param>
+        /// <returns>A point projected onto the line. Result will be clamped to either end, if the projected point lies beyond it.</returns>
+        public static Position ProjectClosestPoint(Position A, Position B, Position P)
+        {
+            Position AP = P - A;
+            Position AB = B - A;
+            float dP = DotF(AP, AB);
+            float dB = DotF(AB, AB);
+            if (dP < 0)
+                return A;
+            else if (dP > dB)
+                return B;
+            else
+                return A + dP / dB * AB;
         }
     }
 }

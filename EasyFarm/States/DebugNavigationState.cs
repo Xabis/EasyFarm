@@ -52,6 +52,7 @@ namespace EasyFarm.States
 
         public override void Exit(IGameContext context)
         {
+            context.API.Navigator.Reset();
             context.API.Follow.Reset();
         }
     }

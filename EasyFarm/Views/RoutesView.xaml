@@ -42,12 +42,12 @@
             <RadioButton x:Name="StraightRoute"
                          DockPanel.Dock="Left"
                          Content="Straight"
-                         IsChecked="{Binding Straight, FallbackValue=True}">
+                         IsChecked="{Binding Path=StraightRoute, FallbackValue=True}">
             </RadioButton>
             <RadioButton x:Name="CircularRoute"
                          DockPanel.Dock="Left"
                          Content="Circular"
-                         IsChecked="{Binding ElementName=StraightRoute, Path=IsChecked, Converter={StaticResource InverseBooleanConverter }}">
+                         IsChecked="{Binding Path=StraightRoute, Converter={StaticResource InverseBooleanConverter }}">
             </RadioButton>
             <CheckBox x:Name="Debug"
                       DockPanel.Dock="Left"

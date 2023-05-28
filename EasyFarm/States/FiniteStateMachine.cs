@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyFarm.Classes;
@@ -29,6 +30,13 @@ using MemoryAPI;
 
 namespace EasyFarm.States
 {
+    public class FiniteStateMachineException : Exception
+    {
+        public FiniteStateMachineException() {}
+        public FiniteStateMachineException(string message) : base(message) {}
+        public FiniteStateMachineException(string message, Exception inner) : base(message, inner) {}
+    }
+
     public class FiniteStateMachine
     {
         private readonly TypeCache<bool> _cache = new TypeCache<bool>();
@@ -109,6 +117,12 @@ namespace EasyFarm.States
                     {
                         Logger.Log(new LogEntry(LoggingEventType.Information, "FSM thread cancelled", ex));
                     }
+                    catch (FiniteStateMachineException ex)
+                    {
+                        Logger.Log(new LogEntry(LoggingEventType.Error, "FSM error", ex));
+                        LogViewModel.Write(ex.Message);
+                        LogViewModel.Write("Bot execution aborted.");
+                    }
                     catch (Exception ex)
                     {
                         Logger.Log(new LogEntry(LoggingEventType.Error, "FSM error", ex));
@@ -118,6 +132,7 @@ namespace EasyFarm.States
                     finally
                     {
                         _fface.Navigator.Reset();
+                        _fface.Follow.Reset();
                     }
                 }
             }, _cancellation.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);

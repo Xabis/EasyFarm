@@ -33,6 +33,7 @@ namespace MemoryAPI.Memory
 
         public INPCTools NPC { get; set; }
 
+        public IAllianceTools Alliance { get; set; }
         public Dictionary<byte, IPartyMemberTools> PartyMember { get; set; }
 
         public IPlayerTools Player { get; set; }

@@ -59,6 +59,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!--  Distance  -->
@@ -66,7 +67,9 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="5"
-                    Content="Distance" />
+                    Content="Distance"
+                    ToolTip="The maximum distance the player may be in order to execute the ability.&#10;Do not confuse with detection distance."
+                    />
 
                 <Slider
                     Grid.Row="0"
@@ -74,18 +77,19 @@
                     Margin="5"
                     Maximum="50"
                     Minimum="0"
-                    ToolTip="Max distance for the move. "
-                    Value="{Binding Distance}" />
+                    ToolTip="The maximum distance the player may be in order to execute the ability.&#10;Do not confuse with detection distance."
+                    Value="{Binding Distance}" VerticalAlignment="Center" />
+                <CheckBox Content="Move player if out of range" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Center" IsChecked="{Binding AllowApproach}" Grid.ColumnSpan="2" Margin="10,0,5,5" ToolTip="When enabled, the player will navigate towards the target until within range of the ability distance.&#10;Navigation occurs even if the 'Approach' option is disabled.&#10;Navigation and then execution of this ability will occur before any other ability that has a lower priority.&#10;If the player is out of range and this option is disabled, the ability will instead fail."/>
 
                 <!--  Limit Use Per Battle  -->
                 <Label
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="0"
                     Margin="5"
                     Content="Max Use" />
 
                 <controls:NumericUpDown
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="1"
                     Margin="5"
                     ToolTip="Limits the maximum number of uses per battle"
@@ -93,13 +97,13 @@
 
                 <!--  Recast per seconds  -->
                 <Label
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Grid.Column="0"
                     Margin="5"
                     Content="Recast" />
 
                 <controls:NumericUpDown
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Grid.Column="1"
                     Margin="5"
                     ToolTip="Limits action recast in seconds. "
@@ -362,6 +366,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label 
                     Grid.Row="0" 
@@ -381,7 +386,18 @@
                     Grid.Column="1"
                     Margin="5,5,5,5"
                     Value="{Binding ChatEventPeriod}"
-                    ToolTip="How long the given chat message is valid" />
+                    ToolTip="How long the given chat message is valid. If minimum is specifed, the window begins after it has elapsed." />
+
+                <Label Content="Minimum (H:M:S)" 
+                       Grid.Row="2" 
+                       Grid.Column="0" />
+                <xctk:TimeSpanUpDown
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="5,5,5,5"
+                    Value="{Binding ChatEventMininum}"
+                    ToolTip="Minimum time that must have passed before the chat message is valid" />
+
             </Grid>
         </TabItem>
 
@@ -393,6 +409,7 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!--  Index  -->
@@ -408,6 +425,12 @@
                     Margin="5"
                     ToolTip="Index of the move use for determining its recast time. "
                     Value="{Binding Index}" />
+                <Label Content="Priority" HorizontalAlignment="Center" Margin="5" Grid.Row="1" VerticalAlignment="Center"/>
+                <controls:NumericUpDown
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    ToolTip="Ability is ordered based on the provided number, where the higher the number, the sooner it is used."
+                    Value="{Binding Priority}" VerticalAlignment="Center" Margin="10,0,10,0" />
 
             </Grid>
         </TabItem>

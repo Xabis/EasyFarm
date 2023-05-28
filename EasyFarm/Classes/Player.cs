@@ -87,6 +87,7 @@ namespace EasyFarm.Classes
         public static void StopRunning(IMemoryAPI fface)
         {
             fface.Navigator.Reset();
+            fface.Follow.Reset();
             TimeWaiter.Pause(100);
         }
 

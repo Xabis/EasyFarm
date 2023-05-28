@@ -34,6 +34,11 @@ namespace EasyFarm.UserSettings
             get => Config.Instance.AggroFilter;
             set => Config.Instance.AggroFilter = value;
         }
+        public bool PartyAggroFilter
+        {
+            get => Config.Instance.PartyAggroFilter;
+            set => Config.Instance.PartyAggroFilter = value;
+        }
         public BattleLists BattleLists
         {
             get => Config.Instance.BattleLists;
@@ -141,8 +146,8 @@ namespace EasyFarm.UserSettings
         }
         public bool StraightRoute
         {
-            get => Config.Instance.Route.StraightRoute;
-            set => Config.Instance.Route.StraightRoute = value;
+            get => Config.Instance.StraightRoute;
+            set => Config.Instance.StraightRoute = value;
         }
         public bool MinimizeToTray
         {
@@ -184,6 +189,50 @@ namespace EasyFarm.UserSettings
         {
             get => Config.Instance.Route;
             set => Config.Instance.Route = value;
+        }
+        public bool RouteLimitTargets {
+            get => Config.Instance.RouteLimitTargets;
+            set => Config.Instance.RouteLimitTargets = value;
+        }
+        public bool RouteTetherPlayer
+        {
+            get => Config.Instance.RouteTetherPlayer;
+            set => Config.Instance.RouteTetherPlayer = value;
+        }
+        public double RouteTolerance
+        {
+            get => Config.Instance.RouteTolerance;
+            set => Config.Instance.RouteTolerance = value;
+        }
+        public double RouteNavMeshTolerance
+        {
+            get => Config.Instance.RouteNavMeshTolerance;
+            set => Config.Instance.RouteNavMeshTolerance = value;
+        }
+        public PullFallbackType PullFallback
+        {
+            get => Config.Instance.PullFallback;
+            set => Config.Instance.PullFallback = value;
+        }
+        public int PullLockTime
+        {
+            get => Config.Instance.PullLockTime;
+            set => Config.Instance.PullLockTime = value;
+        }
+        public bool AllowAutoTarget
+        {
+            get => Config.Instance.AllowAutoTarget;
+            set => Config.Instance.AllowAutoTarget = value;
+        }
+        public int TargetUpperHealth
+        {
+            get => Config.Instance.TargetUpperHealth;
+            set => Config.Instance.TargetUpperHealth = value;
+        }
+        public int TargetLowerHealth
+        {
+            get => Config.Instance.TargetLowerHealth;
+            set => Config.Instance.TargetLowerHealth = value;
         }
     }
 }

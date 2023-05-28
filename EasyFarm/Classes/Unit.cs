@@ -44,6 +44,11 @@ namespace EasyFarm.Classes
         ///     Users settings which control whether this unit is valid.
         /// </summary>
         private readonly IConfig _config = new ProxyConfig();
+        
+        /// <summary>
+        ///     Holds the current target lockout time
+        /// </summary>
+        private System.DateTime _lockout = new DateTime();
 
         public Unit(IMemoryAPI fface, int id)
         {
@@ -127,6 +132,14 @@ namespace EasyFarm.Classes
         }
 
         /// <summary>
+        ///     Whether this unit can be targeted.
+        /// </summary>
+        public bool IsTargetable
+        {
+            get { return _npc.IsTargetable(Id); }
+        }
+
+        /// <summary>
         ///     The unit's name.
         /// </summary>
         public string Name
@@ -185,7 +198,10 @@ namespace EasyFarm.Classes
         /// </summary>
         public bool HasAggroed
         {
-            get { return (!IsClaimed || MyClaim) && Status == Status.Fighting; }
+            get
+            {
+                return Status == Status.Fighting && (MyClaim || (!IsClaimed && IsFacing(_fface.Player.Position)));
+            }
         }
 
         /// <summary>
@@ -203,7 +219,8 @@ namespace EasyFarm.Classes
         {
             get
             {
-                for (byte i = 0; i < _fface.PartyMember.Count; i++)
+                int p0count = _fface.Alliance.Party0Count;
+                for (byte i = 0; i < p0count; i++)
                 {
                     if (_fface.PartyMember[i].ServerID != 0 && ClaimedId == _fface.PartyMember[i].ServerID)
                     {
@@ -211,6 +228,62 @@ namespace EasyFarm.Classes
                     }
                 }
                 return false;
+            }
+        }
+
+        /// <summary>
+        ///     If the unit has aggroed anyone in the player's main party
+        /// </summary>
+        public bool HasAggroedParty
+        {
+            get
+            {
+                if (Status == Status.Fighting)
+                {
+                    int p0count = _fface.Alliance.Party0Count;
+                    for (byte i = 0; i < p0count; i++)
+                    {
+                        var member = _fface.PartyMember[i];
+                        var memberId = member.ServerID;
+                        if (memberId != 0)
+                        {
+                            if (ClaimedId == memberId)
+                                return true;
+                            if (!IsClaimed)
+                            {
+                                var position = _npc.GetPosition(member.TargetIndex);
+                                if (IsFacing(position))
+                                    return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     If a targetting lock is in effect for this unit.
+        /// </summary>
+        public bool isLocked
+        {
+            get
+            {
+                return _lockout > System.DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        ///     Requests a target lock to be applied to the unit
+        /// </summary>
+        /// <param name="Milliseconds">Timeout in milliseconds from current time. If zero, the lock will not be applied.</param>
+        public void setLockout(int Milliseconds)
+        {
+            if (Milliseconds > 0)
+            {
+                DateTime newLock = DateTime.Now.AddMilliseconds(Milliseconds);
+                if (newLock > _lockout)
+                    _lockout = newLock;
             }
         }
 
@@ -238,6 +311,14 @@ namespace EasyFarm.Classes
         {
             get => _unitFilters.MobFilter(_fface, this, _config);
             set => throw new NotImplementedException();
+        }
+
+        public bool IsFacing(Position target, double threshold = 1.0)
+        {
+            Position headingVector = Position.HeadingVector();
+            float distance = (float)Position.Distance(target);
+            Position posProjected = new Position { X = Position.X + headingVector.X * distance, Z = Position.Z + headingVector.Z * distance };
+            return target.Distance(posProjected) < threshold;
         }
     }
 }

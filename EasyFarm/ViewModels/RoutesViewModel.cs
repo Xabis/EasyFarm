@@ -16,6 +16,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 // ///////////////////////////////////////////////////////////////////
 using System.Collections.ObjectModel;
+using System.Runtime.Remoting.Contexts;
 using System.Windows;
 using System.Windows.Input;
 using EasyFarm.Classes;
@@ -48,6 +49,13 @@ namespace EasyFarm.ViewModels
 
             RecordHeader = "Record";
             ViewName = "Routes";
+            AppServices.RegisterEvent<Events.ConfigLoadedEvent>(this, x => RefreshViewModel());
+        }
+
+        private void RefreshViewModel()
+        {
+            RaisePropertyChanged(nameof(StraightRoute));
+            RaisePropertyChanged(nameof(Route));
         }
 
         private void PathRecorder_OnPositionAdded(Position position)
@@ -65,6 +73,18 @@ namespace EasyFarm.ViewModels
         {
             get { return Config.Instance.DebugRoutes; }
             set { Set(ref Config.Instance.DebugRoutes, value); }
+        }
+
+        public bool StraightRoute
+        {
+            get
+            {
+                return Config.Instance.StraightRoute;
+            }
+            set
+            {
+                Set(ref Config.Instance.StraightRoute, value);
+            }
         }
 
         /// <summary>
@@ -217,6 +237,7 @@ namespace EasyFarm.ViewModels
             }
 
             FFACE.Navigator.Reset();
+            FFACE.Follow.Reset();
         }
     }
 }

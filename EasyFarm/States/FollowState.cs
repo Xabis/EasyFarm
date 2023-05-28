@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // If not, see <http://www.gnu.org/licenses/>.
 // ///////////////////////////////////////////////////////////////////
+using EasyFarm.Classes;
 using EasyFarm.Context;
 using MemoryAPI;
 using MemoryAPI.Navigation;
@@ -27,6 +28,8 @@ namespace EasyFarm.States
     /// </summary>
     public class FollowState : BaseState
     {
+        private IUnit FollowedPlayer;
+
         public override void Enter(IGameContext context)
         {
             // Stand up from resting. 
@@ -47,47 +50,59 @@ namespace EasyFarm.States
             // Avoid following empty units. 
             if (string.IsNullOrWhiteSpace(context.Config.FollowedPlayer)) return false;
 
-            // Get the player specified in user settings. 
-            var player = context.Memory.UnitService.GetUnitByName(context.Config.FollowedPlayer);
+            // Names are only valid if it contains at least 3 characters
+            if (context.Config.FollowedPlayer.Length < 3) return false;
+
+            // Get the player specified in user settings.
+            if (FollowedPlayer == null || FollowedPlayer.Name != context.Config.FollowedPlayer)
+                FollowedPlayer = context.Memory.UnitService.GetUnitByName(context.Config.FollowedPlayer);
 
             // If no player is nearby, return. 
-            if (player == null) return false;
+            if (FollowedPlayer == null) return false;
 
-            // If we're already close, no action needed. 
-            return player.Distance > context.Config.FollowDistance;
+            // Run the follow. This also responsible for stopping navigation
+            return true;
         }
 
         public override void Run(IGameContext context)
         {
-            // Get the player specified in user settings. 
-            var player = context.Memory.UnitService.GetUnitByName(context.Config.FollowedPlayer);
+            if (FollowedPlayer == null)
+                return;
 
-            // Follow the player. 
-            context.API.Navigator.DistanceTolerance = context.Config.FollowDistance;
-            var path = context.NavMesh.FindPathBetween(context.API.Player.Position, context.Target.Position);
-            if (path.Count > 0)
+            if (FollowedPlayer.Distance < context.Config.FollowDistance)
             {
-                if (path.Count > 1)
-                {
-                    context.API.Navigator.DistanceTolerance = 0.5;
-                }
-                else
-                {
-                    context.API.Navigator.DistanceTolerance = context.Config.FollowDistance;
-                }
-
-                while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= 0.5)
-                {
-                    path.Dequeue();
-                }
-
-                if (path.Count > 0)
-                {
-                    context.API.Navigator.GotoWaypoint(path.Peek(), true);
-                }
-                else
+                // Sanity check
+                if (Player.Instance.IsMoving)
                 {
                     context.API.Navigator.Reset();
+                    context.API.Follow.Reset();
+                }
+            }
+            else
+            {
+                // Follow the player. 
+                context.API.Navigator.DistanceTolerance = context.Config.FollowDistance;
+                var path = context.NavMesh.FindPathBetween(context.API.Player.Position, FollowedPlayer.Position);
+                if (path.Count > 0)
+                {
+                    while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= context.Config.RouteTolerance)
+                    {
+                        path.Dequeue();
+                    }
+                    if (path.Count > 1)
+                    {
+                        context.API.Navigator.DistanceTolerance = context.Config.RouteTolerance;
+                    }
+
+                    if (path.Count > 0)
+                    {
+                        Route.NavigateTo(context, path.Peek());
+                    }
+                    else
+                    {
+                        context.API.Navigator.Reset();
+                        context.API.Follow.Reset();
+                    }
                 }
             }
         }

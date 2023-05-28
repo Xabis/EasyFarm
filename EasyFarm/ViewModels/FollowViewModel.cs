@@ -35,7 +35,10 @@ namespace EasyFarm.ViewModels
             set
             {
                 Config.Instance.FollowedPlayer = value;
-                AppServices.InformUser("Now following {0}.", value);
+                if (value.Length > 2)
+                    AppServices.InformUser("Now following {0}.", value);
+                else
+                    AppServices.InformUser("No longer following anyone.");
             }
         }
 

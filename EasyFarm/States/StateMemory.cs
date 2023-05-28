@@ -38,5 +38,15 @@ namespace EasyFarm.States
         public Executor Executor { get; set; }
         public IUnitService UnitService { get; set; }
         public IUnitFilters UnitFilters { get; set; }
+
+        /// <summary>
+        /// Gets whether the player is currently backing up due to proximity
+        /// </summary>
+        public bool IsBackingUp { get; set; }
+
+        /// <summary>
+        /// Gets whether the player tether is active
+        /// </summary>
+        public bool NeedsTethered { get; set; }
     }
 }

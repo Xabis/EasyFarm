@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using EasyFarm.States;
 using MemoryAPI;
 using MemoryAPI.Navigation;
 
@@ -12,6 +13,8 @@ public class NavMesh
 
 	static int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; //'MSET';
 	static int NAVMESHSET_VERSION = 1;
+	static int MAX_POLYS = 256;
+
 	private Detour.dtNavMesh dtNavMesh;
 	private Zone _zone;
 
@@ -99,9 +102,10 @@ public class NavMesh
 		else
 		{
 			Unload();
-		}
+            _zone = zone;
+        }
 
-		var headerBufferSize = NavMeshSetHeader.ByteSize();
+        var headerBufferSize = NavMeshSetHeader.ByteSize();
 		var headerBuffer = new byte[headerBufferSize];
 
 		if (!File.Exists(path))
@@ -151,14 +155,11 @@ public class NavMesh
 			}
 		}
 
-		// hard-code to make sure it is compatible with expectation.
-		var maxPolys = header.meshParams.maxPolys;
-
-		var status = new Detour.dtNavMeshQuery().init(navMesh, maxPolys);
-
+		var status = new Detour.dtNavMeshQuery().init(navMesh, MAX_POLYS);
 		if (Detour.dtStatusFailed(status))
 		{
-			return false;
+            EasyFarm.ViewModels.LogViewModel.Write("Navigation: mesh file is invalid or corrupt for zone " + zone.ToString());
+            return false;
 		}
 
 		dtNavMesh = navMesh;
@@ -189,8 +190,7 @@ public class NavMesh
 
 		if (dtNavMesh == null)
 		{
-			EasyFarm.ViewModels.LogViewModel.Write("FindPathBetween: Unable to path due to lacking navigation mesh for zone " + _zone.ToString());
-			return path;
+			throw new FiniteStateMachineException("There is no navigation mesh available for zone " + _zone.ToString());
 		}
 		var startDetourPosition = start.ToDetourPosition();
 		var endDetourPosition = end.ToDetourPosition();
@@ -198,7 +198,7 @@ public class NavMesh
 		var queryFilter = new Detour.dtQueryFilter();
 		var navMeshQuery = new Detour.dtNavMeshQuery();
 
-		var status = navMeshQuery.init(dtNavMesh, 256);
+		var status = navMeshQuery.init(dtNavMesh, MAX_POLYS);
 
 		if (Detour.dtStatusFailed(status))
 		{
@@ -243,49 +243,51 @@ public class NavMesh
 			return path;
 		}
 
-		if (path.Count < 1)
-        {
-            float[] straightPath = new float[256 * 3];
-            byte[] straightPathFlags = new byte[256];
-            uint[] straightPathPolys = new uint[256];
-            int straightPathCount = 256 * 3;
+		if (pathCount > 0)
+		{
+			if (pathPolys[pathCount - 1] != endRef)
+				navMeshQuery.closestPointOnPoly(pathPolys[pathCount - 1], endNearest, endNearest);
+			float[] straightPath = new float[256 * 3];
+			byte[] straightPathFlags = new byte[256];
+			uint[] straightPathPolys = new uint[256];
+			int straightPathCount = 256 * 3;
 
-            status = navMeshQuery.findStraightPath(
-                startNearest,
-                endNearest,
-                pathPolys,
-                pathCount,
-                straightPath,
-                straightPathFlags,
-                straightPathPolys,
-                ref straightPathCount,
-                256,
-                0
-            );
+			status = navMeshQuery.findStraightPath(
+				startNearest,
+				endNearest,
+				pathPolys,
+				pathCount,
+				straightPath,
+				straightPathFlags,
+				straightPathPolys,
+				ref straightPathCount,
+				256,
+				2
+			);
 
-            if (straightPathCount > 1)
-            {
-                if (Detour.dtStatusFailed(status))
-                {
-                    return path;
+			if (straightPathCount > 1)
+			{
+				if (Detour.dtStatusFailed(status))
+				{
+					return path;
 				}
 
 				path.Clear();
 
 				// i starts at 3 so the start position is ignored
 				for (int i = 3; i < straightPathCount * 3;)
-                {
-                    float[] pathPos = new float[3];
-                    pathPos[0] = straightPath[i++];
-                    pathPos[1] = straightPath[i++];
-                    pathPos[2] = straightPath[i++];
+				{
+					float[] pathPos = new float[3];
+					pathPos[0] = straightPath[i++];
+					pathPos[1] = straightPath[i++];
+					pathPos[2] = straightPath[i++];
 
-                    var position = ToFFXIPosition(pathPos);
+					var position = ToFFXIPosition(pathPos);
 
-                    path.Enqueue(position);
-                }
-            }
-        } 
+					path.Enqueue(position);
+				}
+			}
+		} 
 		else
 		{
 			// i starts at 3 so the start position is ignored
@@ -308,7 +310,7 @@ public class NavMesh
 			}
 		}
 
-        return path;
+		return path;
 
 	}
 

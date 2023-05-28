@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 #if DT_POLYREF64
 using dtPolyRef = System.UInt64;
@@ -505,7 +506,7 @@ public static partial class Detour{
 
         public dtOffMeshConnection[] offMeshCons;		//< The tile off-mesh connections. [Size: dtMeshHeader::offMeshConCount]
 
-        public int flags;								//< Tile flags. (See: #dtTileFlags)
+        public int flags = 0;								//< Tile flags. (See: #dtTileFlags)
 
         public int FromBytes(byte[] array, int start) {
             header = new dtMeshHeader();
@@ -589,13 +590,11 @@ public static partial class Detour{
                 offMeshConsSize += nextStart - start;
                 start = nextStart;
             }
-            try
+
+            //Maintainer Note: not sure this is actually being used. This does not appear to be read in the same manner in the original code.
+            if (start < array.Length - 4)
             {
                 flags = BitConverter.ToInt32(array, start);
-            } 
-            catch (ArgumentOutOfRangeException ex)
-            {
-
             }
             start += sizeof(int);
             return start;

@@ -15,7 +15,7 @@
         </Grid.ColumnDefinitions>
 
         <Label Grid.Row="0" Grid.Column="0" Margin="5">Name</Label>
-        <TextBox Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding Name}" />
+        <TextBox Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
         <Label Grid.Row="1" Grid.Column="0" Margin="5">Distance</Label>
         <Slider Grid.Row="1" Grid.Column="1"                
                 Minimum="1" Maximum="25" 

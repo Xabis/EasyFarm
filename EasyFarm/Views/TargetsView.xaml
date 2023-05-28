@@ -44,31 +44,51 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <CheckBox 
                 Grid.Row="0"
                 Grid.Column="0"
                 Margin="0 0 0 5"
                 Content="Aggro"
+                ToolTip="Mobs whom are aggro to anyone may be selected.&#10;This includes other players not in your party.&#10;Enemies aggro to YOU are always targetted regardless of this setting."
                 IsChecked="{Binding Aggro}" />
             <CheckBox 
                 Grid.Row="0"
                 Grid.Column="1"
                 Margin="0 0 0 5"
                 Content="Party Claimed"
+                ToolTip="Mobs whom are claimed by any party member may be selected.&#10;If party aggro is being prioritized, then this setting is ignored."
                 IsChecked="{Binding PartyClaimed}" />
             <CheckBox 
                 Grid.Row="1"
                 Grid.Column="0"
                 Margin="0 0 0 5"
                 Content="Unclaimed"
+                ToolTip="Mobs whom are unclaimed may be selected."
                 IsChecked="{Binding Unclaimed}" />
             <CheckBox 
                 Grid.Row="1"
                 Grid.Column="1"
                 Margin="0 0 0 5"
                 Content="Claimed"
+                ToolTip="Mobs whom are claimed may be selected.&#10;Warning: this applies to all mobs that are claimed, including those not claimed by you or your party."
                 IsChecked="{Binding Claimed}" />
+            <CheckBox 
+                Grid.Row="2"
+                Grid.Column="0"
+                Margin="0 0 0 5"
+                Content="Untargettable"
+                ToolTip="Mobs whose nameplate is hidden may be selected. Examples: Yovra, Phuabo, etc.&#10;Warning: Pulling abilities will never be used against untargettable foes."
+                IsChecked="{Binding Untargettable}" />
+            <CheckBox 
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0 0 0 5"
+                Content="Prioritize Party Aggro"
+                ToolTip="When checked, enemies that are aggro to OR claimed by any party member are prioritized for targetting&#10;CAUTION: this prioritization takes precendient over the include and exclude lists and most other filters.&#10;When unchecked, no special priorization is done, however the target may still be selected if all other normal conditions apply."
+                IsChecked="{Binding PartyAggro}" />
         </Grid>
 
         <Grid Grid.Row="2"

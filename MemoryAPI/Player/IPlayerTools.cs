@@ -38,5 +38,7 @@ namespace MemoryAPI
         Zone Zone { get; }
         Job Job { get; }
         Job SubJob { get; }
+        int ActionTimer1 { get; }
+        int ActionTimer2 { get; }
     }
 }

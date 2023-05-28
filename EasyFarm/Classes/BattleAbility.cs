@@ -51,6 +51,7 @@ namespace EasyFarm.Classes
         /// </summary>
         private double _distance = Constants.MeleeDistance;
 
+        private bool _allowapproach;
         /// <summary>
         ///     Is this move ready for use?
         /// </summary>
@@ -149,6 +150,7 @@ namespace EasyFarm.Classes
         private int _resummonMpHigh;
 
         private int _index;
+        private int _priority;
         private int _id;
         private int _mpCost;
         private int _tpCost;
@@ -156,7 +158,7 @@ namespace EasyFarm.Classes
         private TargetType _targetType;
         private string _chatEvent;
         private TimeSpan _chatEventPeriod;
-
+        private TimeSpan _chatEventMinimum;
 
         static BattleAbility()
         {
@@ -208,6 +210,8 @@ namespace EasyFarm.Classes
         public BattleAbility()
         {
             AutoFillCommand = new RelayCommand(async () => await AutoFill());
+            _allowapproach = true;
+            _priority = 0;
         }
 
         /// <summary>
@@ -242,6 +246,11 @@ namespace EasyFarm.Classes
                 Set(ref _distance, (int)value);
                 AppServices.InformUser("Distance set to {0}.", _distance);
             }
+        }
+        public bool AllowApproach
+        {
+            get { return _allowapproach; }
+            set { Set(ref _allowapproach, value); }
         }
 
         public bool IsEnabled
@@ -467,6 +476,15 @@ namespace EasyFarm.Classes
             set { Set(ref _index, value); }
         }
 
+        /// <summary>
+        ///     Ability priority, sorted in decending order.
+        /// </summary>
+        public int Priority
+        {
+            get { return _priority; }
+            set { Set(ref _priority, value); }
+        }
+
         public int Id
         {
             get { return _id; }
@@ -518,10 +536,23 @@ namespace EasyFarm.Classes
             set { Set(ref _chatEvent, value); }
         }
 
+        /// <summary>
+        ///     A maximum time range to wait before acting on a chat message.
+        ///     If minimum is configured, the window begins after it has elapsed. 
+        /// </summary>
         public TimeSpan? ChatEventPeriod
         {
             get { return _chatEventPeriod; }
-            set { Set(ref _chatEventPeriod, value ?? default(TimeSpan)); }
+            set { Set(ref _chatEventPeriod, value ?? default); }
+        }
+
+        /// <summary>
+        ///     A minimum time to wait before acting on a chat message
+        /// </summary>
+        public TimeSpan? ChatEventMininum
+        {
+            get { return _chatEventMinimum; }
+            set { Set(ref _chatEventMinimum, value ?? default); }
         }
 
         /// <summary>

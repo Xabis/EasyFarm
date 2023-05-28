@@ -23,5 +23,7 @@ namespace MemoryAPI.Windower
     {
         void SendString(string stringToSend);
         void SendKeyPress(Keys key);
+        void SendKeyUp(Keys key);
+        void SendKeyDown(Keys key);
     }
 }

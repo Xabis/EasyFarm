@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EasyFarm.UserSettings;
 using MemoryAPI.Memory;
+using System.Runtime.Remoting.Contexts;
 
 namespace EasyFarm.Classes
 {
@@ -93,6 +94,11 @@ namespace EasyFarm.Classes
         public IUnit GetUnitByName(string name)
         {
             return Units.FirstOrDefault(x => x.Name == name);
+        }
+
+        public IUnit GetUnitById(int id)
+        {
+            return Units.FirstOrDefault(x => x.Id == id);
         }
     }
 }

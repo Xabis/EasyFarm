@@ -59,7 +59,7 @@ namespace EasyFarm.Classes
 
         private void RecordLogItem(string message)
         {
-            LoggedItems.Add(message);
+            LoggedItems.Insert(0, message);
 
             // Limit list to only 1000 items: prevent system out of memory exception.
             if (LoggedItems.Count > 1000)

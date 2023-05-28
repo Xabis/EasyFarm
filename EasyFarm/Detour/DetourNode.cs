@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using dtStatus = System.UInt32;
 using dtNodeIndex = System.UInt16;
+using System.Collections.Generic;
 #if DT_POLYREF64
 using dtPolyRef = System.UInt64;
 //using dtTileRef = System.UInt64;
@@ -42,21 +43,27 @@ public partial class Detour{
     public enum dtNodeFlags {
         DT_NODE_OPEN = 0x01,
         DT_NODE_CLOSED = 0x02,
+        DT_NODE_PARENT_DETACHED = 0x04 // parent of the node is not adjacent. Found using raycast.
     };
 
     public const dtNodeIndex DT_NULL_IDX = dtNodeIndex.MaxValue; //(dtNodeIndex)~0;
 
+    public const int DT_NODE_PARENT_BITS = 24;
+    public const int DT_NODE_STATE_BITS = 2;
+
     public class dtNode {
-        public float[] pos = new float[3];				//< Position of the node.
-        public float cost;					//< Cost from previous node to current node.
-        public float total;				//< Cost up to the node.
-        public uint pidx;// : 30;		//< Index to parent node.
-        public byte flags;// : 2;		//< Node flags 0/open/closed.
+        public float[] pos = new float[3];		//< Position of the node.
+        public float cost;					    //< Cost from previous node to current node.
+        public float total;				        //< Cost up to the node.
+        public uint pidx = DT_NODE_PARENT_BITS; //< Index to parent node.
+        public uint state = DT_NODE_STATE_BITS; //< extra state information.
+        public byte flags = 3;                  //< Node flags 0/open/closed.
         public dtPolyRef id;				    //< Polygon ref the node corresponds to.
-        ///
+
         public static int getSizeOf() {
             //C# can't guess the sizeof of the float array, let's pretend
             return sizeof(float) * (3 + 1 + 1)
+                + sizeof(uint)
                 + sizeof(uint)
                 + sizeof(byte)
                 + sizeof(dtPolyRef);
@@ -152,6 +159,24 @@ public partial class Detour{
         public dtNodeIndex getNext(int i) {
             return m_next[i];
         }
+        public dtNode[] findNodes(dtPolyRef id, int maxNodes)
+        {
+            List<dtNode> arr = new List<dtNode>();
+            uint n = 0;
+            uint bucket = (uint)(dtHashRef(id) & (m_hashSize - 1));
+            dtNodeIndex i = m_first[bucket];
+            while (i != DT_NULL_IDX)
+            {
+                if (m_nodes[i].id == id)
+                {
+                    if (n >= maxNodes)
+                        return arr.ToArray();
+                    arr.Add(m_nodes[i]);
+                }
+                i = m_next[i];
+            }
+            return arr.ToArray();
+        }
 
         public dtNode findNode(dtPolyRef id)
         {
@@ -166,14 +191,14 @@ public partial class Detour{
 	        return null;
         } 
 
-        public dtNode getNode(dtPolyRef id)
+        public dtNode getNode(dtPolyRef id, uint state = 0)
         {
 	        uint bucket = (uint)(dtHashRef(id) & (m_hashSize-1));
 	        dtNodeIndex i = m_first[bucket];
 	        dtNode node = null;
 	        while (i != DT_NULL_IDX)
 	        {
-		        if (m_nodes[i].id == id)
+		        if (m_nodes[i].id == id && m_nodes[i].state == state)
 			        return m_nodes[i];
 		        i = m_next[i];
 	        }
@@ -190,7 +215,8 @@ public partial class Detour{
 	        node.cost = 0;
 	        node.total = 0;
 	        node.id = id;
-	        node.flags = 0;
+            node.state = state;
+            node.flags = 0;
 	
 	        m_next[i] = m_first[bucket];
 	        m_first[bucket] = i;

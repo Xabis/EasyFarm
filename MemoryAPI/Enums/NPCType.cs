@@ -22,6 +22,7 @@ namespace MemoryAPI
     /// </summary>
     public enum NpcType : byte
     {
+        Unknown = 0,
         PC = 0x01,
         NPC = 0x02,
         Self = 0x0D,

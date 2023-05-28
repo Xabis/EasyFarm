@@ -31,18 +31,23 @@ namespace EasyFarm.Classes
         public bool IsActive { get; }
         public bool IsClaimed { get; }
         public bool IsRendered { get; }
+        public bool IsTargetable { get; }
         public string Name { get; }
         public NpcType NpcType { get; }
         public float PosX { get; }
         public float PosY { get; }
         public float PosZ { get; }
         public Status Status { get; } = Status.Unknown;
+        public float ModelSize { get; }
         public bool MyClaim { get; }
         public bool HasAggroed { get; }
+        public bool HasAggroedParty { get; }
         public bool IsDead { get; }
         public bool PartyClaim { get; }
         public double YDifference { get; }
         public bool IsPet { get; }
         public bool IsValid { get; set; } = false;
+        public bool isLocked { get; }
+        public void setLockout(int Milliseconds) {}
     }
 }

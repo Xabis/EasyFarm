@@ -16,7 +16,10 @@
 // If not, see <http://www.gnu.org/licenses/>.
 // ///////////////////////////////////////////////////////////////////
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
+using System.Xml.Linq;
 using EasyFarm.Classes;
 using EasyFarm.Context;
 using MemoryAPI.Navigation;
@@ -59,45 +62,44 @@ namespace EasyFarm.States
             context.API.Navigator.DistanceTolerance = 1;
 
             var currentPosition = context.Config.Route.GetCurrentPosition(context.API.Player.Position);
-
-            if (currentPosition == null || currentPosition.Distance(context.API.Player.Position) <= 0.5)
-            {
+            if (currentPosition == null || currentPosition.Distance(context.API.Player.Position) <= context.Config.RouteTolerance)
                 currentPosition = context.Config.Route.GetNextPosition(context.API.Player.Position);
-            }
 
-            if (currentPosition.Distance(context.API.Player.Position) < 0.5)
-            {
+            double wpDist = currentPosition.Distance(context.API.Player.Position);
+            if (wpDist < context.Config.RouteTolerance) {
+                context.API.Navigator.Reset();
                 context.API.Follow.Reset();
-            }
-
-            var path = context.NavMesh.FindPathBetween(context.API.Player.Position, currentPosition);
-            if (path.Count > 0)
-            {
-                context.API.Navigator.DistanceTolerance = 0.5;
-
-                while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= context.API.Navigator.DistanceTolerance)
-                {
-                    path.Dequeue();
-                }
-
+                return;
+            } else if (wpDist > context.Config.RouteNavMeshTolerance) {
+                var path = context.NavMesh.FindPathBetween(context.API.Player.Position, currentPosition);
                 if (path.Count > 0)
                 {
-                    var node = path.Peek();
-                    float deltaX = node.X - context.API.Player.Position.X;
-                    float deltaY = node.Y - context.API.Player.Position.Y;
-                    float deltaZ = node.Z - context.API.Player.Position.Z;
-                    context.API.Follow.SetFollowCoords(deltaX, deltaY, deltaZ);
-                } 
-                else
-                {
-                    context.Config.Route.GetNextPosition(context.API.Player.Position);
-                    context.API.Follow.Reset();
+                    context.API.Navigator.DistanceTolerance = context.Config.RouteTolerance;
+
+                    while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= context.API.Navigator.DistanceTolerance)
+                    {
+                        path.Dequeue();
+                    }
+
+                    if (path.Count > 0)
+                    {
+                        Route.NavigateTo(context, path.Peek());
+                    }
+                    else
+                    {
+                        context.Config.Route.GetNextPosition(context.API.Player.Position);
+                        context.API.Navigator.Reset();
+                        context.API.Follow.Reset();
+                    }
+                    return;
                 }
             }
+            Route.NavigateTo(context, currentPosition);
         }
 
         public override void Exit(IGameContext context)
         {
+            context.API.Navigator.Reset();
             context.API.Follow.Reset();
         }
     }

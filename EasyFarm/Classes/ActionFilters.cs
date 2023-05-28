@@ -144,9 +144,10 @@ namespace EasyFarm.Classes
 
             // Do not cast trust magic with aggro.
             var isTrustMagic = action.AbilityType == AbilityType.Trust;
+                //Aggro check can be expensive, so only check if actually trying to summon
             var hasAggro = units.Any(x => x.HasAggroed);
             if (isTrustMagic && hasAggro)
-                yield return Result.Fail("Cannot use trust magic with aggro");
+                    yield return Result.Fail("Cannot use trust magic with aggro");
 
             // Do not cast action not matching chat text.
             if (!string.IsNullOrEmpty(action.ChatEvent))
@@ -156,11 +157,23 @@ namespace EasyFarm.Classes
                 List<EliteAPI.ChatEntry> matches = chatEntries
                     .Where(x => x.Text.ToLower().Contains(action.ChatEvent.ToLower())).ToList();
 
+                //There are no messages containing the chat text; abort
                 if (!matches.Any())
                     yield return Result.Fail("Chat message has not been received");
 
-                if (action.ChatEventPeriod.HasValue && !matches.Any(x => DateTime.Now <= x.Timestamp.Add(action.ChatEventPeriod.Value)))
-                    yield return Result.Fail("No chat messages valid for the given time range");
+                //If a time constraint has been added, then apply it
+                if (action.ChatEventMininum.HasValue || action.ChatEventPeriod.HasValue)
+                {
+                    DateTime startTime = DateTime.Now;
+                    DateTime endTime = DateTime.MinValue;
+
+                    if (action.ChatEventMininum.HasValue)
+                        startTime -= action.ChatEventMininum.Value;
+                    if (action.ChatEventPeriod.HasValue)
+                        endTime = startTime - action.ChatEventPeriod.Value;
+                    if (!matches.Any(x => (x.Timestamp >= endTime) && (x.Timestamp <= startTime)))
+                        yield return Result.Fail("No chat messages valid for the given time range");
+                }
             }
         }
 

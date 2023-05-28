@@ -10,8 +10,8 @@
     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                   VerticalScrollBarVisibility="Auto">
         <StackPanel>
-            <Expander Header="Battle Settings" Margin="0, 5">
-                <UniformGrid>
+            <Expander Header="Battle Settings" Margin="0,3">
+                <UniformGrid Columns="2">
                     <CheckBox Content="Engage"
                       ToolTip="Sets whether the player should engage the target."
                       IsChecked="{Binding ShouldEngage}" 
@@ -28,9 +28,14 @@
                       ToolTip="Sets whether the player should return to homepoint on death."
                       IsChecked="{Binding HomePointOnDeath}"
                       Margin="5, 5" />
+                    <CheckBox Content="Allow Autotargeting"
+                      ToolTip="The player will not cycle disengage/engage during an auto-target.&#10;Warning: pull abilities will not execute for auto targetted enemies while this option is enabled."
+                      IsChecked="{Binding AllowAutoTarget}"
+                      Margin="5, 5" />
+                    
                 </UniformGrid>
             </Expander>
-            <Expander Header="Trust Settings" Margin="0, 5">
+            <Expander Header="Trust Settings" Margin="0,3">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -46,9 +51,69 @@
                         Value="{Binding TrustPartySize}"  />
                 </Grid>
             </Expander>
-            <Expander Header="Misc Settings" Margin="0,2">
+            <Expander Header="Navigation Settings" Margin="0,3">
                 <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0"
+                           Grid.Column="0"
+                           Content="Goal Tolerance"
+                           ToolTip="A navigation goal is considered reached when within this distance from the player.&#10;This globally affects all navigation, such as approaching a target and moving along a route." VerticalAlignment="Center"
+                           />
+                    <controls:NumericUpDown 
+                        Grid.Row="0"
+                        Margin="5"
+                        Value="{Binding RouteTolerance}" Grid.Column="1" />
+                    <Label Grid.Row="1"
+                           Grid.Column="0"
+                           Content="NavMesh Tolerance"
+                           ToolTip="The navigation goal must be at least this distance away to engage the path finding system.&#10;When under this distance, the player moves directly towards the goal without regard to terrain.&#10;This globally affects all navigation, such as approaching a target and moving along a route." VerticalAlignment="Center"
+                           />
+                    <controls:NumericUpDown 
+                        Grid.Row="1"
+                        Margin="5"
+                        Value="{Binding RouteNavMeshTolerance}" Grid.Column="1" />
+                </Grid>
+            </Expander>            
+            <Expander Header="Route Settings" Margin="0,3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0"
+                           Grid.Column="0"
+                           Content="Wander Distance"
+                           ToolTip="Distance that affects target restrictions and tethering. This is measured to each route segment, and not just the waypoints themselves."
+                           />
+                    <Slider Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            Minimum="0"
+                            Maximum="350"
+                            Value="{Binding WanderDistance}" VerticalAlignment="Center" />
+                    <CheckBox IsChecked="{Binding RouteLimitTargets}" Grid.Row="1" Grid.ColumnSpan="2" Margin="5,2,5,2" Content="Restrict targetting based on wander distance" ToolTip="If enabled, targets must be within range of the route. This check is made in addition to the player distance to target.&#10;A route must be configured for this option to apply." />
+                    <CheckBox IsChecked="{Binding RouteTetherPlayer}" Grid.Row="2" Grid.ColumnSpan="2" Margin="5,2,5,2" Content="Tether player based on wander distance" ToolTip="If enabled, navigating back into range of your route will be prioritized over selecting a new target.&#10;Only applies when there is no current target and no party aggro.&#10;A route must be configured for this option to apply." />
+                </Grid>
+            </Expander>
+            <Expander Header="Misc Settings" Margin="0,3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
                         <RowDefinition />
                         <RowDefinition />
                         <RowDefinition />
@@ -87,15 +152,6 @@
                             Minimum="0"
                             Maximum="50"
                             Value="{Binding MeleeDistance}" />
-                    <Label Grid.Row="3"
-                           Grid.Column="0"
-                           Content="Wander Distance" />
-                    <Slider Grid.Row="3"
-                            Grid.Column="1"
-                            Margin="5 0 0 0"
-                            Minimum="0"
-                            Maximum="350"
-                            Value="{Binding WanderDistance}" />
                     <Label Grid.Row="4"
                            Grid.Column="0"
                            Content="Global Cooldown" />
@@ -108,12 +164,27 @@
                             Value="{Binding GlobalCooldown}" />
                     <Label Grid.Row="5"
                            Grid.Column="0"
+                           ToolTip="When choosing a new target, the mob HP must be within the specified range.&#10;Changing this setting only makes sense if there is another source of damage, such as another player."
+                           Content="HP Range" />
+                    <controls:RangeSlider
+                        Grid.Row="5"
+                        Grid.Column="1"
+                        Margin="5"
+                        IsSnapToTickEnabled="True"
+                        LowerValue="{Binding TargetLowerHealth}"
+                        Maximum="100"
+                        Minimum="0"
+                        TickFrequency="1"
+                        ToolTip="When choosing a new target, the mob HP must be within the specified range.&#10;Changing this setting only makes sense if there is another source of damage, such as another player."
+                        UpperValue="{Binding TargetUpperHealth}" />
+                    <Label Grid.Row="6"
+                           Grid.Column="0"
                            Content="Avoid Objects" />
-                    <CheckBox Grid.Row="5"
+                    <CheckBox Grid.Row="6"
                             Grid.Column="1"
                             Margin="5 0 0 0"
                               IsChecked="{Binding AvoidObjects}" />
-                    <Button Grid.Row="6"
+                    <Button Grid.Row="7"
                             Grid.ColumnSpan="2" Grid.Column="0"
                                 Margin="0 5 0 0"
                             Command="{Binding RestoreDefaultsCommand}"

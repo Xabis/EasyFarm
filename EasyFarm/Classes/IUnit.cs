@@ -30,6 +30,7 @@ namespace EasyFarm.Classes
         bool IsActive { get; }
         bool IsClaimed { get; }
         bool IsRendered { get; }
+        bool IsTargetable { get; }
         string Name { get; }
         NpcType NpcType { get; }
         float PosX { get; }
@@ -38,10 +39,13 @@ namespace EasyFarm.Classes
         Status Status { get; }    
         bool MyClaim { get; }
         bool HasAggroed { get; }
+        bool HasAggroedParty { get; }
         bool IsDead { get; }
         bool PartyClaim { get; }
         double YDifference { get; }
         bool IsPet { get; }
         bool IsValid { get; set; }
+        bool isLocked { get; }
+        void setLockout(int Milliseconds);
     }
 }

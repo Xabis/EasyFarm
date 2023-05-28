@@ -18,6 +18,7 @@
 using EasyFarm.Classes;
 using EasyFarm.UserSettings;
 using MemoryAPI;
+using System.Runtime.Remoting.Contexts;
 
 namespace EasyFarm.States
 {
@@ -73,6 +74,7 @@ namespace EasyFarm.States
             _stateMachine.Stop();
             _playerMonitor.Stop();
             //_chatMonitor.Stop();
+            _fface.Navigator.Reset();
             _fface.Follow.Reset();
         }
     }

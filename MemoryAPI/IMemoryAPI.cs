@@ -25,6 +25,7 @@ namespace MemoryAPI
     {
         INavigatorTools Navigator { get; set; }
         INPCTools NPC { get; set; }
+        IAllianceTools Alliance { get; set; }
         System.Collections.Generic.Dictionary<byte, IPartyMemberTools> PartyMember { get; set; }
         IPlayerTools Player { get; set; }
         ITargetTools Target { get; set; }

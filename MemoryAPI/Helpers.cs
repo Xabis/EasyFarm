@@ -58,6 +58,8 @@ namespace MemoryAPI
 
         public static NpcType GetNpcType(EliteAPI.EntityEntry entity)
         {
+            if (entity == null)
+                return NpcType.Unknown;
             if (entity.WarpPointer == 0) return NpcType.InanimateObject;
             if (IsOfType(entity.SpawnFlags, (int)NpcType.Mob)) return NpcType.Mob;
             if (IsOfType(entity.SpawnFlags, (int)NpcType.NPC)) return NpcType.NPC;

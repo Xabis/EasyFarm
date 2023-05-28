@@ -29,6 +29,29 @@ namespace EasyFarm.ViewModels
         {
             RestoreDefaultsCommand = new RelayCommand(RestoreDefaults);
             ViewName = "Settings";
+            AppServices.RegisterEvent<Events.ConfigLoadedEvent>(this, x => RefreshViewModel());
+        }
+
+        private void RefreshViewModel()
+        {
+            RaisePropertyChanged(nameof(ShouldEngage));
+            RaisePropertyChanged(nameof(ShouldApproach));
+            RaisePropertyChanged(nameof(AllowAutoTarget));
+            RaisePropertyChanged(nameof(DetectionDistance));
+            RaisePropertyChanged(nameof(HeightThreshold));
+            RaisePropertyChanged(nameof(MeleeDistance));
+            RaisePropertyChanged(nameof(WanderDistance));
+            RaisePropertyChanged(nameof(RouteLimitTargets));
+            RaisePropertyChanged(nameof(RouteTetherPlayer));
+            RaisePropertyChanged(nameof(RouteTolerance));
+            RaisePropertyChanged(nameof(RouteNavMeshTolerance));
+            RaisePropertyChanged(nameof(GlobalCooldown));
+            RaisePropertyChanged(nameof(AvoidObjects));
+            RaisePropertyChanged(nameof(EnableTabTargeting));
+            RaisePropertyChanged(nameof(HomePointOnDeath));
+            RaisePropertyChanged(nameof(TrustPartySize));
+            RaisePropertyChanged(nameof(TargetUpperHealth));
+            RaisePropertyChanged(nameof(TargetLowerHealth));
         }
 
         public ICommand RestoreDefaultsCommand { get; set; }
@@ -43,6 +66,12 @@ namespace EasyFarm.ViewModels
         {
             get { return Config.Instance.IsApproachEnabled; }
             set { Set(ref Config.Instance.IsApproachEnabled, value); }
+        }
+
+        public bool AllowAutoTarget
+        {
+            get { return Config.Instance.AllowAutoTarget; }
+            set { Set(ref Config.Instance.AllowAutoTarget, value); }
         }
 
         public double DetectionDistance
@@ -82,6 +111,58 @@ namespace EasyFarm.ViewModels
             {
                 Set(ref Config.Instance.WanderDistance, (int) value);
                 AppServices.InformUser("Wander Distance Set: {0}.", (int) value);
+            }
+        }
+
+        public bool RouteLimitTargets
+        {
+            get { return Config.Instance.RouteLimitTargets; }
+            set
+            {
+                Set(ref Config.Instance.RouteLimitTargets, value);
+                if (value)
+                {
+                    AppServices.InformUser("Targetting now restricted.", value);
+                }
+                else
+                {
+                    AppServices.InformUser("Targetting no longer restricted.", value);
+                }
+            }
+        }
+        public bool RouteTetherPlayer
+        {
+            get { return Config.Instance.RouteTetherPlayer; }
+            set
+            {
+                Set(ref Config.Instance.RouteTetherPlayer, value);
+                if (value)
+                {
+                    AppServices.InformUser("Player now tethered.", value);
+                }
+                else
+                {
+                    AppServices.InformUser("Player no longer tethered.", value);
+                }
+            }
+        }
+
+        public double RouteTolerance
+        {
+            get { return Config.Instance.RouteTolerance; }
+            set
+            {
+                Set(ref Config.Instance.RouteTolerance, value);
+                AppServices.InformUser("Route Tolerance Set: {0}.", value);
+            }
+        }
+        public double RouteNavMeshTolerance
+        {
+            get { return Config.Instance.RouteNavMeshTolerance; }
+            set
+            {
+                Set(ref Config.Instance.RouteNavMeshTolerance, value);
+                AppServices.InformUser("Route Mesh Tolerance Set: {0}.", value);
             }
         }
 
@@ -131,6 +212,26 @@ namespace EasyFarm.ViewModels
             }
         }
 
+        public int TargetUpperHealth
+        {
+            get { return Config.Instance.TargetUpperHealth; }
+            set
+            {
+                Set(ref Config.Instance.TargetUpperHealth, value);
+                AppServices.InformUser("Global Upper Target HP target Set: {0}.", value);
+            }
+        }
+
+        public int TargetLowerHealth
+        {
+            get { return Config.Instance.TargetLowerHealth; }
+            set
+            {
+                Set(ref Config.Instance.TargetLowerHealth, value);
+                AppServices.InformUser("Global Lower Target HP target Set: {0}.", value);
+            }
+        }
+
         private void RestoreDefaults()
         {
             DetectionDistance = Constants.DetectionDistance;
@@ -143,6 +244,9 @@ namespace EasyFarm.ViewModels
             ShouldApproach = true;
             ShouldEngage = true;
             HomePointOnDeath = false;
+            AllowAutoTarget = true;
+            RouteTetherPlayer = false;
+            RouteLimitTargets = false;
             TrustPartySize = Constants.TrustPartySize;
             AppServices.InformUser("Defaults have been restored.");
         }        

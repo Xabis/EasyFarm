@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:EasyFarm.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="1000" d:DesignWidth="300">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel>
             <GroupBox Header="Notorius Monsters">
@@ -16,6 +16,22 @@
             </GroupBox>
             <GroupBox Header="Mobs to Avoid">
                 <local:IgnoredView/>
+            </GroupBox>
+            <GroupBox>
+                <GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Foreground="White">PULL FALLBACK</TextBlock>
+                        <TextBlock Foreground="White" Grid.Column="1" ToolTip="Determines the action taken when all pulling abilities fail.&#10;An ability fails when the game provides an error message during use.&#10;Examples: out of range, no line of sight, on cooldown, no range weapon, etc.&#10;You must have at least one pull ability configured for this setting to take effect.">(?)</TextBlock>
+                    </Grid>
+                </GroupBox.Header>
+                <local:PullBehaviourView/>
             </GroupBox>
         </StackPanel>
     </ScrollViewer>

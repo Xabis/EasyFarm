@@ -28,6 +28,7 @@ namespace MemoryAPI
         bool IsActive(int id);
         bool IsClaimed(int id);
         bool IsRendered(int id);
+        bool IsTargetable(int id);
         string Name(int id);
         NpcType NPCType(int id);
         float PosX(int id);

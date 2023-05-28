@@ -18,6 +18,9 @@
 using System.Linq;
 using EasyFarm.Classes;
 using EasyFarm.Context;
+using EasyFarm.UserSettings;
+using EasyFarm.ViewModels;
+using static EasyFarm.Parsing.Resources;
 
 namespace EasyFarm.States
 {
@@ -34,12 +37,15 @@ namespace EasyFarm.States
             if (new RestState().Check(context)) return false;
             if (new SummonTrustsState().Check(context)) return false;
             if (!context.Target.IsValid) return false;
+            if (context.Target.isLocked) return false;
+            if (!context.Target.IsTargetable) return false;
             return context.Config.BattleLists["Pull"].Actions.Any(x => x.IsEnabled);
         }
 
         public override void Enter(IGameContext context)
         {
             context.API.Navigator.Reset();
+            context.API.Follow.Reset();
         }
 
         /// <summary>
@@ -48,9 +54,28 @@ namespace EasyFarm.States
         /// </summary>
         public override void Run(IGameContext context)
         {
-            var actions = context.Config.BattleLists["Pull"].Actions.ToList();
+            var cfg = context.Config;
+            var actions = cfg.BattleLists["Pull"].Actions.ToList();
             var usable = actions.Where(x => ActionFilters.TargetedFilter(context.API, x, context.Target)).ToList();
-            context.Memory.Executor.UseTargetedActions(context, usable, context.Target);
+            if (usable.Any())
+            {
+                if (!context.Memory.Executor.UseTargetedActions(context, usable, context.Target, true))
+                {
+                    if (!context.Target.HasAggroed)
+                    {
+                        if (cfg.PullFallback == PullFallbackType.Lock)
+                        {
+                            LogViewModel.Write("Unable to pull target; locking for " + cfg.PullLockTime + "ms");
+                            context.Target.setLockout(cfg.PullLockTime);
+                        }
+                        else if (cfg.PullFallback == PullFallbackType.Approach && cfg.IsApproachEnabled)
+                        {
+                            LogViewModel.Write("Unable to pull target; navigating towards mob for " + cfg.PullLockTime + "ms");
+                            context.Target.setLockout(cfg.PullLockTime);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

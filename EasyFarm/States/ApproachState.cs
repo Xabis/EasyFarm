@@ -30,6 +30,7 @@ namespace EasyFarm.States
     /// </summary>
     public class ApproachState : BaseState
     {
+        const double BACKUP_THRESHOLD = 0.25;
         public override bool Check(IGameContext context)
         {
             if (new RestState().Check(context)) return false;
@@ -50,8 +51,12 @@ namespace EasyFarm.States
             // Approach when there are no pulling moves available. 
             if (!usable.Any()) return true;
 
-            // Approach mobs if their distance is close. 
-            return context.Target.Distance < 8;
+            // Approach mobs if their distance is close and approach is enabled.
+            if (context.Config.IsApproachEnabled)
+                return
+                    (context.Target.isLocked && context.Config.PullFallback == PullFallbackType.Approach)
+                    || context.Target.Distance < 8;
+            return false;
         }
 
         public override void Run(IGameContext context)
@@ -62,49 +67,70 @@ namespace EasyFarm.States
             // Has the user decided that we should approach targets?
             if (context.Config.IsApproachEnabled)
             {
-                // Move to target if out of melee range. 
-                var path = context.NavMesh.FindPathBetween(context.API.Player.Position, context.Target.Position);
-                if (path.Count > 0)
+                //If the player is fighting right on top of the target, then hold the down key to backup. This relies on target lock.
+                double wpDist = context.Target.Distance;
+                if (wpDist <= BACKUP_THRESHOLD && context.Player.Status == Status.Fighting)
                 {
-                    if (path.Count > 1)
-                    {
-                        context.API.Navigator.DistanceTolerance = 0.5;
-                    }
-                    else
-                    {
-                        context.API.Navigator.DistanceTolerance = context.Config.MeleeDistance;
-                    }
+                    context.API.Windower.SendKeyDown(EliteMMO.API.Keys.NUMPAD2);
+                    context.Memory.IsBackingUp = true;
+                    return;
+                } else if (context.Memory.IsBackingUp)
+                {
+                    context.API.Windower.SendKeyUp(EliteMMO.API.Keys.NUMPAD2);
+                    context.Memory.IsBackingUp = false;
+                }
 
-                    while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= context.API.Navigator.DistanceTolerance)
-                    {
-                        path.Dequeue();
-                    }
-                    
+                // Move to target if out of melee range.
+                if (wpDist < context.Config.MeleeDistance)
+                {
+                    context.API.Navigator.FaceHeading(context.Target.Position);
+                    context.API.Navigator.Reset();
+                    context.API.Follow.Reset();
+
+                    // Has the user decided we should engage in battle. 
+                    if (context.Config.IsEngageEnabled)
+                        if (!context.API.Player.Status.Equals(Status.Fighting) && context.Target.Distance < 25)
+                            context.API.Windower.SendString(Constants.AttackTarget);
+
+                    return;
+                }
+                else if (wpDist > context.Config.RouteNavMeshTolerance + context.Config.MeleeDistance)
+                {
+                    var path = context.NavMesh.FindPathBetween(context.API.Player.Position, context.Target.Position);
                     if (path.Count > 0)
                     {
-                        var node = path.Peek();
+                        while (path.Count > 0 && path.Peek().Distance(context.API.Player.Position) <= context.Config.RouteTolerance)
+                        {
+                            path.Dequeue();
+                        }
 
-                        float deltaX = node.X - context.API.Player.Position.X;
-                        float deltaY = node.Y - context.API.Player.Position.Y;
-                        float deltaZ = node.Z - context.API.Player.Position.Z;
-                        context.API.Follow.SetFollowCoords(deltaX, deltaY, deltaZ);
-                    }
-                    else
-                    {
-                        context.API.Navigator.FaceHeading(context.Target.Position);
-                        context.API.Follow.Reset();
+                        if (path.Count > 1)
+                        {
+                            context.API.Navigator.DistanceTolerance = context.Config.RouteTolerance;
+                        }
+                        else
+                        {
+                            context.API.Navigator.DistanceTolerance = context.Config.MeleeDistance;
+                        }
 
-                        // Has the user decided we should engage in battle. 
-                        if (context.Config.IsEngageEnabled)
-                            if (!context.API.Player.Status.Equals(Status.Fighting) && context.Target.Distance < 25)
-                                context.API.Windower.SendString(Constants.AttackTarget);
+                        if (path.Count > 0)
+                        {
+                            Route.NavigateTo(context, path.Peek());
+                            return;
+                        }
                     }
                 }
-            } 
+                Route.NavigateTo(context, context.Target.Position);
+            }
             else
             {
                 // Face mob. 
                 context.API.Navigator.FaceHeading(context.Target.Position);
+
+                // Has the user decided we should engage in battle. 
+                if (context.Config.IsEngageEnabled)
+                    if (!context.API.Player.Status.Equals(Status.Fighting) && context.Target.Distance < 25)
+                        context.API.Windower.SendString(Constants.AttackTarget);
             }
         }
     }

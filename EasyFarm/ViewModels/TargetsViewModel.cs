@@ -45,7 +45,11 @@ namespace EasyFarm.ViewModels
             get { return Config.Instance.AggroFilter; }
             set { Set(ref Config.Instance.AggroFilter, value); }
         }
-
+        public bool PartyAggro
+        {
+            get { return Config.Instance.PartyAggroFilter; }
+            set { Set(ref Config.Instance.PartyAggroFilter, value); }
+        }
         public bool Unclaimed
         {
             get { return Config.Instance.UnclaimedFilter; }
@@ -62,6 +66,12 @@ namespace EasyFarm.ViewModels
         {
             get { return Config.Instance.ClaimedFilter; }
             set { Set(ref Config.Instance.ClaimedFilter, value); }
+        }
+
+        public bool Untargettable
+        {
+            get { return Config.Instance.UntargettableFilter; }
+            set { Set(ref Config.Instance.UntargettableFilter, value); }
         }
 
         protected override void Add()

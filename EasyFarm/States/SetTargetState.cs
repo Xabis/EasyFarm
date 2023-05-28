@@ -36,6 +36,17 @@ namespace EasyFarm.States
                 // Still not time to update for new target. 
                 if (!ShouldCheckTarget()) return false;
 
+                // If tethering is in effect, then prevent targetting until within range again
+                if (context.Memory.NeedsTethered)
+                {
+                    if (context.Config.RouteTetherPlayer && context.Config.Route.IsPathSet && !context.Player.HasAggro)
+                    {
+                        if (!context.Config.Route.IsWithinDistance(context.API.Player.Position, context.Config.WanderDistance))
+                            return false;
+                        context.Memory.NeedsTethered = false;
+                    }
+                }
+
                 // First get the first mob by distance.
                 var mobs = context.Units.Where(x => x.IsValid).ToList();
                 mobs = TargetPriority.Prioritize(mobs).ToList();

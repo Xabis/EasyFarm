@@ -16,6 +16,7 @@
 // If not, see <http://www.gnu.org/licenses/>.
 // ///////////////////////////////////////////////////////////////////
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -42,6 +43,7 @@ namespace MemoryAPI.Memory
             Navigator = new NavigationTools(eliteApi);
             NPC = new NpcTools(eliteApi);
             PartyMember = new Dictionary<byte, IPartyMemberTools>();
+            Alliance = new AllianceTools(eliteApi);
             Player = new PlayerTools(eliteApi);
             Target = new TargetTools(eliteApi);
             Timer = new TimerTools(eliteApi);
@@ -288,6 +290,14 @@ namespace MemoryAPI.Memory
                 return (_api.GetCachedEntity(id).Render0000 & 0x200) == 0x200;
             }
 
+            public bool IsTargetable(int id)
+            {
+                //Bit 7 controls whether the name plate is visible or not.
+                //If applied, it is assumed the enemy is not targetable.
+                //Examples: Yovras, Phuabos, Gargouilles (Ruan).
+                return (_api.GetCachedEntity(id).Render0004 & 0x80) != 0x80;
+            }
+
             public string Name(int id) { return _api.GetCachedEntity(id).Name; }
 
             public NpcType NPCType(int id)
@@ -307,6 +317,29 @@ namespace MemoryAPI.Memory
                 var status = (EntityStatus)_api.GetCachedEntity(id).Status;
                 return Helpers.ToStatus(status);
             }
+        }
+
+        public class AllianceTools : IAllianceTools
+        {
+            private readonly EliteAPI _api;
+            private readonly int _index;
+
+            public AllianceTools(EliteAPI api)
+            {
+                _api = api;
+            }
+
+            public int AllianceLeaderId => _api.Party.GetAllianceInfo().AllianceLeaderId;
+            public int Party0LeaderId => _api.Party.GetAllianceInfo().Party0LeaderId;
+            public int Party1LeaderId => _api.Party.GetAllianceInfo().Party1LeaderId;
+            public int Party2LeaderId => _api.Party.GetAllianceInfo().Party2LeaderId;
+            public byte Party0Visible => _api.Party.GetAllianceInfo().Party0Visible;
+            public byte Party1Visible => _api.Party.GetAllianceInfo().Party1Visible;
+            public byte Party2Visible => _api.Party.GetAllianceInfo().Party2Visible;
+            public byte Party0Count => _api.Party.GetAllianceInfo().Party0Count;
+            public byte Party1Count => _api.Party.GetAllianceInfo().Party1Count;
+            public byte Party2Count => _api.Party.GetAllianceInfo().Party2Count;
+            public byte Invited => _api.Party.GetAllianceInfo().Invited;
         }
 
         public class PartyMemberTools : IPartyMemberTools
@@ -333,6 +366,10 @@ namespace MemoryAPI.Memory
 
             public int ServerID => (int)Unit.ID;
 
+            public int Index => Unit.Index;
+
+            public int TargetIndex => (int)Unit.TargetIndex;
+
             public string Name => Unit.Name;
 
             public int HPCurrent => (int)Unit.CurrentHP;
@@ -353,18 +390,22 @@ namespace MemoryAPI.Memory
             {
                 get
                 {
-                    var key = $"PartyMember.NpcType.{_index}";
-                    var result = RuntimeCache.Get<NpcType?>(key);
-
-                    if (result == null)
+                    if (UnitPresent)
                     {
-                        var entity = FindEntityByServerId(ServerID);
-                        var npcType = Helpers.GetNpcType(entity);
-                        RuntimeCache.Set(key, npcType, DateTimeOffset.Now.AddSeconds(3));
-                        return npcType;
-                    }
+                        var key = $"PartyMember.NpcType.{_index}";
+                        var result = RuntimeCache.Get<NpcType?>(key);
+                        if (result != null)
+                            return result.Value;
 
-                    return result.Value;
+                        var entity = FindEntityByServerId(ServerID);
+                        if (entity != null)
+                        {
+                            var npcType = Helpers.GetNpcType(entity);
+                            RuntimeCache.Set(key, npcType, DateTimeOffset.Now.AddSeconds(3));
+                            return npcType;
+                        }
+                    }
+                    return NpcType.Unknown;
                 }
             }
 
@@ -452,6 +493,10 @@ namespace MemoryAPI.Memory
             public Job Job => (Job)_api.Player.MainJob;
 
             public Job SubJob => (Job)_api.Player.SubJob;
+
+            public int ActionTimer1 => _api.GetCachedEntity(_api.Entity.LocalPlayerIndex).ActionTimer1;
+
+            public int ActionTimer2 => _api.GetCachedEntity(_api.Entity.LocalPlayerIndex).ActionTimer2;
         }
 
         public class TargetTools : ITargetTools
@@ -512,12 +557,22 @@ namespace MemoryAPI.Memory
             {
                 _api.ThirdParty.KeyPress(key);
             }
+
+            public void SendKeyUp(Keys key)
+            {
+                _api.ThirdParty.KeyUp(key);
+            }
+
+            public void SendKeyDown(Keys key)
+            {
+                _api.ThirdParty.KeyDown(key);
+            }
         }
 
         public class ChatTools : IChatTools
         {
             private readonly EliteAPI _api;
-            public Queue<EliteAPI.ChatEntry> ChatEntries { get; set; } = new Queue<EliteAPI.ChatEntry>();
+            public ConcurrentQueue<EliteAPI.ChatEntry> ChatEntries { get; set; } = new ConcurrentQueue<EliteAPI.ChatEntry>();
 
             public ChatTools(EliteAPI api)
             {

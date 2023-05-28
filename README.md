@@ -1,4 +1,54 @@
-### EasyFarm
+# Ehancements made in this fork:
+- NEW Feature: Chat timings support
+
+    ![Alt Text](/.github/images/chat-timing.png)
+
+    Intended to provide finer control over ability exection timing, such as with skill chaining.
+- NEW Feature: Ability Priority
+
+    ![Alt Text](/.github/images/ability-priority.png)
+
+    Allows you to configure which ability in a group will be prioritized over others. Highest number wins.
+- NEW Feature: New targeting options
+
+    ![Alt Text](/.github/images/targeting.png)
+
+    - **Untargettable** - When unchecked, mobs without a name plate are automatically ignored. Examples include yovra and phuabo enemy types.
+    - **Prioritize Party Aggro** - When checked, enemies that are considered aggro to you or another party member are priorized for targetting. This can also cause enemies to be targetted that would otherwise be filtered by your other options.
+- NEW Feature: Pull failure fallback
+
+    ![Alt Text](/.github/images/pull-fallback.png)
+
+    If all of your configured pulling abilities fail, such as "unable to see" or "out of range" etc, this option determines what action the bot should take next.
+
+    - **Lock and choose a new target** - Abandon and ignore the target until the configured lockout time has expired.
+    - **Lock and approach** - Pulling abilities are temporarily sealed, forcing the player to navigate into range and engage with melee.
+    - **Nothing** - Pulling will be tried repeatedly until the target is no longer valid.
+
+- NEW Feature: Navigation and Routing updated with new configuration
+
+    ![Alt Text](/.github/images/config-nav.png)
+
+    Wander Distance now applies to distance to the nearest route segment, not just the waypoints themselves. This fixes issues where only a few waypoints are defined, far apart.
+
+    A tether option is also available that will further restrict targetting based on distance from the route. This is not a true tether, however, and only affects targetting specifically.
+
+- NEW Feature: Option to prevent cycling disengage/engage when the game auto targets.
+
+    ![Alt Text](/.github/images/autotarget.png)
+- FIX: Navigation subsystem has been fixed. This corrects MANY of the issues that the official repo introduced when adding in the recast system. Updated the detour library from latest source.
+- FIX: Solved additional navigation issues with random stopping and gap closing.
+- FIX: Aggro checkbox now honored. When unchecked, unclaimed enemies that are not aggro to the party are ignored.
+- FIX: Mobs must now be either claimed or directly facing a party member, to be considered aggro to the party. Large enemies that do not turn are problematic however. This can lead to false positives if any aggro mob happens to angle towards you during the detection cycle.
+- FIX: Bot will now actually follow things when configured to do so.
+- FIX: Follow setting not saving in some cases.
+- FIX: Log window order has been reversed; this addresses a problem with the 2k line limit.
+- FIX: Improved range attack handling.
+- FIX: Resolved intermittent crashes while reading chat messages.
+- FIX: Circular routing option can now be properly selected and saved.
+- FIX: Attempt to backup if fighting target directly on top of player
+
+# EasyFarm
 General purpose farming tool for Final Fantasy XI. 
 
 ![EasyFarm GUI](https://cloud.githubusercontent.com/assets/5349608/18617645/662f66d8-7da2-11e6-8039-af1f54a52dcb.png)
@@ -9,12 +59,12 @@ General purpose farming tool for Final Fantasy XI.
 The newest version of EasyFarm can be found under [Releases](https://github.com/EasyFarm/EasyFarm/releases).
 
 #### EasyFarm is Free Software
-[![GPLv3](http://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/philosophy/free-sw.html)
+[![GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/philosophy/free-sw.html)
 
 EasyFarm is free software produced under the GPLv3 license with the goal of producing a first class automation software for Final Fantasy XI that is freely accessible to everyone. 
 
 #### Powered by EliteMMO Network
-[![EliteMMO Network, your source for cheat, hacks, tutorials and more!!!](http://www.elitemmonetwork.com/img/468_60_FFXI.gif)](http://www.elitemmonetwork.com)
+[![EliteMMO Network, your source for cheat, hacks, tutorials and more!!!](https://www.elitemmonetwork.com/img/468_60_FFXI.gif)](http://www.elitemmonetwork.com)
 
 EasyFarm uses the EliteMMO API provided by Wiccaan at EliteMMO Network. Without his hard work and generosity in keeping the EliteAPI free to use, progress on this program would not be possible. 
 

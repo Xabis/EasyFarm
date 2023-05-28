@@ -24,6 +24,7 @@ namespace EasyFarm.UserSettings
     public interface IConfig
     {
         bool AggroFilter { get; set; }
+        bool PartyAggroFilter { get; set; }
         BattleLists BattleLists { get; set; }
         bool ClaimedFilter { get; set; }
         double DetectionDistance { get; set; }
@@ -54,5 +55,14 @@ namespace EasyFarm.UserSettings
         double FollowDistance { get; set; }
         string FollowedPlayer { get; set; }
         Route Route { get; set; }
+        bool RouteLimitTargets { get; set; }
+        bool RouteTetherPlayer { get; set; }
+        double RouteTolerance { get; set; }
+        double RouteNavMeshTolerance { get; set; }
+        PullFallbackType PullFallback { get; set; }
+        int PullLockTime { get; set; }
+        bool AllowAutoTarget { get; set; }
+        int TargetUpperHealth { get; set; }
+        int TargetLowerHealth { get; set; }
     }
 }

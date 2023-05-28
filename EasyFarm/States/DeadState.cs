@@ -34,6 +34,7 @@ namespace EasyFarm.States
         {
             // Stop program from running to next waypoint.
             context.API.Navigator.Reset();
+            context.API.Follow.Reset();
 
             if (context.Config.HomePointOnDeath) HomePointOnDeath(context);
 
